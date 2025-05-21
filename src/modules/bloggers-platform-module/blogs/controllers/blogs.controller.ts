@@ -9,12 +9,14 @@ import {
   Param,
   Post,
   Put,
+  Res,
 } from '@nestjs/common';
 import { CreateAndUpdateBlogtDto } from '../dto/createAndUpdate-blog.dto';
 import { BlogsService } from '../services/blogs.service';
 import { BlogsQueryRepository } from '../repositories/blogs.query-repository';
 import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
 import { Blog } from '../schemas/blog.schema';
+import type { Response } from 'express';
 
 @Controller('blogs')
 export class BlogsController {
@@ -58,16 +60,9 @@ export class BlogsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteOneBlog(@Param('id') id: string) {
+  async deleteOneBlog(@Param('id') id: string, @Res() res: Response) {
     const blog = await this.blogsService.deleteBlog(id);
     if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
-    return;
+    return { hh: 1233 };
   }
 }
-
-// 1) уточнить возврат Blog или BlogDocument
-// 2) возврат ошибки {
-//     "message": "Blog by 682dad5b3466de46cc8c3991 not found",
-//     "error": "Not Found",
-//     "statusCode": 404
-// } или Not Found
