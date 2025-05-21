@@ -9,6 +9,7 @@ import {
 import { CreateBlogtDto } from '../dto/create-blog.dto';
 import { BlogsService } from '../services/blogs.service';
 import { BlogsQueryRepository } from '../repositories/blogs.query-repository';
+import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
 
 @Controller('blogs')
 export class BlogsController {
@@ -18,8 +19,10 @@ export class BlogsController {
   ) {}
 
   @Get()
-  async getAll() {
-    return await this.blogsQueryRepository.getAll();
+  async getAll(): Promise<BlogViewDto[]> {
+    const blogsDB = await this.blogsQueryRepository.getAll();
+    const items = blogsDB.map((blog) => BlogViewDto.mapToView(blog));
+    return items;
   }
 
   @Post()
