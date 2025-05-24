@@ -1,39 +1,34 @@
-import { Injectable} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BlogsRepository } from '../repositories/blogs.repository';
 import { CreateAndUpdateBlogtDto } from '../dto/createAndUpdate-blog.dto';
-import { Blog, BlogDocument } from '../schemas/blog.schema';
-
+import { Blog, BlogDocument, BlogModelType } from '../schemas/blog.schema';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class BlogsService {
   constructor(
+    @InjectModel(Blog.name)
+    private BlogModel: BlogModelType,
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async createBlog(createBlogDto: CreateAndUpdateBlogtDto): Promise<BlogDocument> {
-    //const newBlog:BlogModel = blogModel.createBlog(createBlogDto)
-    // awaut thos.blogrepo.save(newBlog)
-    return await this.blogsRepository.create(createBlogDto);
+  async createBlog(createBlogDto: CreateAndUpdateBlogtDto): Promise<string> {
+    const blog = this.BlogModel.createInstance({
+      name: createBlogDto.name,
+      description: createBlogDto.description,
+      websiteUrl: createBlogDto.websiteUrl,
+    });
+    await this.blogsRepository.save(blog);
+    return blog._id.toString();
   }
 
-  async updateBlog(id: string, blogDto: CreateAndUpdateBlogtDto): Promise<BlogDocument | null> {
-    //const targetBlog = this.blogrRepo.findById(id)
-    // targetBlog.update(blogDto)
-   // awaut thos.blogrepo.save(newBlog)
-    return await this.blogsRepository.update(id, blogDto)
+  async updateBlog(id: string, blogDto: CreateAndUpdateBlogtDto) {
+    const blog = await this.blogsRepository.getByIdOrNotFoundFail(id);
+    blog?.update(blogDto);
+    await this.blogsRepository.save(blog!);
   }
 
-async deleteContetn(id:string) {
- //const targetBlog = this.blogrRepo.findById(id)
-    // targetBlog.deleteConent()
-   // awaut thos.blogrepo.save(newBlog)
-}
-
-   async deleteBlog(id: string): Promise<BlogDocument | null> {
-     //const targetBlog = this.blogrRepo.findById(id)
-    // targetBlog.delete()
-   // awaut thos.blogrepo.save(newBlog)
-    return await this.blogsRepository.delete(id)
+  async deleteBlog(id: string): Promise<BlogDocument | null> {
+    return await this.blogsRepository.delete(id);
   }
-
 }

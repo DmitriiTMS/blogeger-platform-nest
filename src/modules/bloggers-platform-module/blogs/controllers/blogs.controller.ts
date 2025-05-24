@@ -25,24 +25,22 @@ export class BlogsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAll(): Promise<BlogViewDto[]> {
-    const blogsDB = await this.blogsQueryRepository.getAll();
-    const items = blogsDB.map((blog) => BlogViewDto.mapToView(blog));
-    return items;
+    return await this.blogsQueryRepository.getAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async getOneBlog(@Param('id') id: string): Promise<BlogViewDto | null> {
-    const blog = await this.blogsQueryRepository.getOne(id);
-    if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
-    return BlogViewDto.mapToView(blog);
+    return await this.blogsQueryRepository.getByIdOrNotFoundFail(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createBlog(@Body() body: CreateAndUpdateBlogtDto): Promise<BlogViewDto> {
-    const blog = await this.blogsService.createBlog(body);
-    return BlogViewDto.mapToView(blog)
+  async createBlog(
+    @Body() body: CreateAndUpdateBlogtDto,
+  ): Promise<BlogViewDto> {
+    const blogId = await this.blogsService.createBlog(body);
+    return await this.blogsQueryRepository.getByIdOrNotFoundFail(blogId);
   }
 
   @Put(':id')
@@ -51,9 +49,7 @@ export class BlogsController {
     @Param('id') id: string,
     @Body() body: CreateAndUpdateBlogtDto,
   ) {
-    const blog = await this.blogsService.updateBlog(id, body);
-    if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
-    return;
+    return await this.blogsService.updateBlog(id, body);
   }
 
   @Delete(':id')
@@ -61,9 +57,8 @@ export class BlogsController {
   async deleteOneBlog(@Param('id') id: string) {
     const blog = await this.blogsService.deleteBlog(id);
     if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
-    return
+    return;
   }
-
 
   // @Post()
   // @HttpCode(HttpStatus.CREATED)
@@ -71,6 +66,4 @@ export class BlogsController {
   //   const blog = await this.blogsQueryRepository.getOne(id);
   //   if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
   // }
-
-
 }

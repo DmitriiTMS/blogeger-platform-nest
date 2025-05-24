@@ -1,34 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogDocument } from '../schemas/blog.schema';
 import { Model, Types } from 'mongoose';
-import { CreateAndUpdateBlogtDto } from '../dto/createAndUpdate-blog.dto';
 
 @Injectable()
 export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
 
-  async create(createBlogDto: CreateAndUpdateBlogtDto): Promise<BlogDocument> {
-    return await this.blogModel.create({
-      name: createBlogDto.name,
-      description: createBlogDto.description,
-      websiteUrl: createBlogDto.websiteUrl,
-      isMembership: false,
-    });
+  async save(blog: BlogDocument) {
+    await blog.save();
   }
 
-  async update(
-    id: string,
-    blogDto: CreateAndUpdateBlogtDto,
-  ): Promise<BlogDocument | null> {
-    return await this.blogModel.findOneAndUpdate(
-      { _id: id },
-      {
-        name: blogDto.name,
-        description: blogDto.description,
-        websiteUrl: blogDto.websiteUrl,
-      },
-    );
+  async getByIdOrNotFoundFail(id: string): Promise<BlogDocument | null> {
+    const blog = await this.blogModel.findById(id);
+    if (!blog) {
+      throw new NotFoundException(`Blog by ${id} not found`);
+    }
+    return blog;
   }
 
   async delete(id: string): Promise<BlogDocument | null> {
