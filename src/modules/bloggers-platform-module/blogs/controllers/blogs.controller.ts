@@ -14,7 +14,6 @@ import { CreateAndUpdateBlogtDto } from '../dto/createAndUpdate-blog.dto';
 import { BlogsService } from '../services/blogs.service';
 import { BlogsQueryRepository } from '../repositories/blogs.query-repository';
 import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
-import { Blog } from '../schemas/blog.schema';
 
 @Controller('blogs')
 export class BlogsController {
@@ -22,12 +21,6 @@ export class BlogsController {
     private blogsService: BlogsService,
     private blogsQueryRepository: BlogsQueryRepository,
   ) {}
-
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  async createBlog(@Body() body: CreateAndUpdateBlogtDto): Promise<Blog> {
-    return await this.blogsService.createBlog(body);
-  }
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -43,6 +36,13 @@ export class BlogsController {
     const blog = await this.blogsQueryRepository.getOne(id);
     if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
     return BlogViewDto.mapToView(blog);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async createBlog(@Body() body: CreateAndUpdateBlogtDto): Promise<BlogViewDto> {
+    const blog = await this.blogsService.createBlog(body);
+    return BlogViewDto.mapToView(blog)
   }
 
   @Put(':id')
@@ -63,4 +63,14 @@ export class BlogsController {
     if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
     return
   }
+
+
+  // @Post()
+  // @HttpCode(HttpStatus.CREATED)
+  // async createPostByBlogId(@Body() body: CreateAndUpdateBlogtDto) {
+  //   const blog = await this.blogsQueryRepository.getOne(id);
+  //   if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
+  // }
+
+
 }

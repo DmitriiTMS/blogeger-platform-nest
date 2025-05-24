@@ -9,11 +9,18 @@ export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
 
   async create(createBlogDto: CreateAndUpdateBlogtDto): Promise<BlogDocument> {
-    const createdBlog = new this.blogModel(createBlogDto);
-    return createdBlog.save();
+    return await this.blogModel.create({
+      name: createBlogDto.name,
+      description: createBlogDto.description,
+      websiteUrl: createBlogDto.websiteUrl,
+      isMembership: false,
+    });
   }
 
-  async update(id: string, blogDto: CreateAndUpdateBlogtDto): Promise<Blog | null> {
+  async update(
+    id: string,
+    blogDto: CreateAndUpdateBlogtDto,
+  ): Promise<BlogDocument | null> {
     return await this.blogModel.findOneAndUpdate(
       { _id: id },
       {
@@ -24,7 +31,9 @@ export class BlogsRepository {
     );
   }
 
-  async delete(id: string): Promise<Blog | null>{
-      return await this.blogModel.findByIdAndDelete({_id: new Types.ObjectId(id)})
+  async delete(id: string): Promise<BlogDocument | null> {
+    return await this.blogModel.findByIdAndDelete({
+      _id: new Types.ObjectId(id),
+    });
   }
 }

@@ -17,6 +17,14 @@ export class PostViewDto {
   createdAt: Date;
   extendedLikesInfo: ExtendedLikesInfo;
 
+  newestLikes: [
+    {
+      addedAt: string;
+      userId: string;
+      login: string;
+    },
+  ];
+
   static mapToView(post: PostDocument): PostViewDto {
     const dto = new PostViewDto();
 
@@ -32,6 +40,15 @@ export class PostViewDto {
       dislikesCount: post.extendedLikesInfo.dislikesCount,
       myStatus: post.extendedLikesInfo.myStatus,
     };
+
+
+    dto.newestLikes = [
+      {
+        addedAt: '2025-05-24T10:30:07.491Z',
+        userId: 'userId',
+        login: 'login',
+      },
+    ];
 
     return dto;
   }

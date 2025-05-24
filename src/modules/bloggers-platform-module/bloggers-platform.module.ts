@@ -10,6 +10,8 @@ import { PostsController } from './posts/controllers/posts.controller';
 import { PostsRepository } from './posts/repositories/posts.repository';
 import { Post, PostSchema } from './posts/schemas/post.schema';
 import { PostsQueryRepository } from './posts/repositories/posts.query-repository';
+import { CommentsController } from './comments/controllers/comments.controller';
+import { CommentsService } from './comments/services/comments.service';
 
 @Module({
   imports: [
@@ -18,14 +20,15 @@ import { PostsQueryRepository } from './posts/repositories/posts.query-repositor
       { name: Post.name, schema: PostSchema },
     ]),
   ],
-  controllers: [BlogsController, PostsController],
+  controllers: [BlogsController, PostsController, CommentsController],
   providers: [
     BlogsService,
     BlogsRepository,
     BlogsQueryRepository,
     PostsService,
     PostsRepository,
-    PostsQueryRepository
+    PostsQueryRepository,
+    CommentsService
   ],
 })
 export class BloggersPlatformModule {}

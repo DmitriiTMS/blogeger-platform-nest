@@ -17,11 +17,11 @@ export class PostsService {
     return await this.postsRepository.create(createPostDto, blog!.name);
   }
 
-  async updatePost(id: string, postDto: PostUpdateDto): Promise<Post | null> {
+  async updatePost(id: string, postDto: PostUpdateDto): Promise<PostDocument | null> {
     return await this.postsRepository.update(id, postDto);
   }
 
-  async deletePost(id: string): Promise<Post | null> {
+  async deletePost(id: string): Promise<PostDocument | null> {
     return await this.postsRepository.delete(id);
   }
 }

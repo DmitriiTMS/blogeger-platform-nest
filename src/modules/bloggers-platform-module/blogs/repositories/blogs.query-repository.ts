@@ -12,6 +12,6 @@ export class BlogsQueryRepository {
   }
 
    async getOne(id: string): Promise<BlogDocument | null> {
-    return await this.blogModel.findOne({_id: new Types.ObjectId(id)})
+    return await this.blogModel.findById(id)
   }
 }

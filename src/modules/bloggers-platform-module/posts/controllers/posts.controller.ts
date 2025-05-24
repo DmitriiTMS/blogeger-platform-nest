@@ -11,7 +11,6 @@ import {
   Put,
 } from '@nestjs/common';
 import { PostCreateDto } from '../dto/post-create.dto';
-import { Post as PostClass } from '../schemas/post.schema';
 import { PostsService } from '../services/posts.service';
 import { PostViewDto } from '../dto/view-dto/post.view-dto';
 import { PostsQueryRepository } from '../repositories/posts.query-repository';
@@ -26,14 +25,14 @@ export class PostsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createPost(@Body() body: PostCreateDto): Promise<PostClass> {
+  async createPost(@Body() body: PostCreateDto): Promise<PostViewDto> {
     const post = await this.postsService.createPost(body);
     return PostViewDto.mapToView(post);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async getAllPosts(): Promise<PostClass[]> {
+  async getAllPosts(): Promise<PostViewDto[]> {
     const postsDB = await this.postsQueryRepository.getAll();
     const items = postsDB.map((post) => PostViewDto.mapToView(post));
     return items;

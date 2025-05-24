@@ -29,7 +29,7 @@ export class PostsRepository {
     });
   }
 
-  async update(id: string, postDto: PostUpdateDto): Promise<Post | null> {
+  async update(id: string, postDto: PostUpdateDto): Promise<PostDocument | null> {
     return await this.postModel.findOneAndUpdate(
       { _id: id },
       {
@@ -41,7 +41,7 @@ export class PostsRepository {
     );
   }
 
-  async delete(id: string): Promise<Post | null> {
+  async delete(id: string): Promise<PostDocument | null> {
     return await this.postModel.findByIdAndDelete({
       _id: new Types.ObjectId(id),
     });
