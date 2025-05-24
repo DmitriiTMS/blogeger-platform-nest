@@ -8,12 +8,8 @@ import { Model, Types } from 'mongoose';
 export class UsersRepository {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(createUserDto: UserCreateDto): Promise<UserDocument> {
-    return await this.userModel.create({
-      login: createUserDto.login,
-      password: createUserDto.password,
-      email: createUserDto.email,
-    });
+  async save(user: UserDocument) {
+    await user.save();
   }
 
   async delete(id: string): Promise<UserDocument | null> {

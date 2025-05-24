@@ -8,12 +8,15 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserCreateDto } from '../dto/user-create.dto';
 import { User } from '../schemas/users.schema';
 import { UsersService } from '../services/users.service';
 import { UsersQueryRepository } from '../repositories/users-query.repository';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
+import { GetUsersQueryParams } from '../dto/paginate/get-users-query-params.input-dto';
+import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
 
 @Controller('users')
 export class UsersController {
@@ -25,16 +28,13 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() body: UserCreateDto): Promise<UserViewDto> {
-    const user = await this.usersService.createUser(body);
-    return UserViewDto.mapToView(user);
+    const userId = await this.usersService.createUser(body);
+    return await this.usersQueryRepository.getByIdOrNotFoundFail(userId);
   }
 
   @Get()
-  @HttpCode(HttpStatus.OK)
-  async getAllUsers(): Promise<UserViewDto[]> {
-    const usersDB = await this.usersQueryRepository.getAll();
-    const items = usersDB.map((user) => UserViewDto.mapToView(user));
-    return items;
+  async getAllUsers( @Query() query: GetUsersQueryParams): Promise<PaginatedViewDto<UserViewDto[]>> {
+    return await this.usersQueryRepository.getAll(query);
   }
 
   @Delete(':id')
