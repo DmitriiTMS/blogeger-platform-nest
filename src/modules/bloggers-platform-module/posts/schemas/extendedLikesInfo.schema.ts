@@ -21,6 +21,7 @@ export class ExtendedLikesInfo {
     required: true,
   })
   myStatus: LikeStatus;
+
 }
 
 export const ExtendedLikesInfoSchema =

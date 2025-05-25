@@ -11,7 +11,7 @@ export class BlogsRepository {
     await blog.save();
   }
 
-  async getByIdOrNotFoundFail(id: string): Promise<BlogDocument | null> {
+  async getByIdOrNotFoundFail(id: string): Promise<BlogDocument> {
     const blog = await this.blogModel.findById(id);
     if (!blog) {
       throw new NotFoundException(`Blog by ${id} not found`);
@@ -20,8 +20,10 @@ export class BlogsRepository {
   }
 
   async delete(id: string): Promise<BlogDocument | null> {
-    return await this.blogModel.findByIdAndDelete({
-      _id: new Types.ObjectId(id),
-    });
+    return await this.blogModel.findByIdAndDelete(id);
+  }
+
+   async getOne(id: string): Promise<BlogDocument | null> {
+    return await this.blogModel.findById(id)
   }
 }

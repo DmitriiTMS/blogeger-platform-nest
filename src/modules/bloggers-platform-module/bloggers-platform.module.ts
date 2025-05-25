@@ -12,6 +12,8 @@ import { Post, PostSchema } from './posts/schemas/post.schema';
 import { PostsQueryRepository } from './posts/repositories/posts.query-repository';
 import { CommentsController } from './comments/controllers/comments.controller';
 import { CommentsService } from './comments/services/comments.service';
+import { CommentsRepository } from './comments/repositories/comments.repository';
+
 
 @Module({
   imports: [
@@ -28,7 +30,8 @@ import { CommentsService } from './comments/services/comments.service';
     PostsService,
     PostsRepository,
     PostsQueryRepository,
-    CommentsService
+    CommentsService,
+    CommentsRepository
   ],
 })
 export class BloggersPlatformModule {}

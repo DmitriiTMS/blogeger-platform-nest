@@ -1,10 +1,17 @@
 import { LikeStatus } from '../../schemas/extendedLikesInfo.schema';
 import { PostDocument } from '../../schemas/post.schema';
 
-type ExtendedLikesInfo = {
+type NewestLikes = {
+  addedAt: Date | string;
+  userId: string;
+  login: string;
+};
+
+type ExtendedLikesInfoType = {
   likesCount: number;
   dislikesCount: number;
   myStatus: LikeStatus;
+  newestLikes: NewestLikes[];
 };
 
 export class PostViewDto {
@@ -15,17 +22,9 @@ export class PostViewDto {
   blogId: string;
   blogName: string;
   createdAt: Date;
-  extendedLikesInfo: ExtendedLikesInfo;
+  extendedLikesInfo: ExtendedLikesInfoType;
 
-  newestLikes: [
-    {
-      addedAt: string;
-      userId: string;
-      login: string;
-    },
-  ];
-
-  static mapToView(post: PostDocument): PostViewDto {
+  static mapToView(post: PostDocument, listReactions: NewestLikes[]): PostViewDto {
     const dto = new PostViewDto();
 
     dto.id = post._id.toString();
@@ -39,16 +38,8 @@ export class PostViewDto {
       likesCount: post.extendedLikesInfo.likesCount,
       dislikesCount: post.extendedLikesInfo.dislikesCount,
       myStatus: post.extendedLikesInfo.myStatus,
+      newestLikes: listReactions,
     };
-
-
-    dto.newestLikes = [
-      {
-        addedAt: '2025-05-24T10:30:07.491Z',
-        userId: 'userId',
-        login: 'login',
-      },
-    ];
 
     return dto;
   }

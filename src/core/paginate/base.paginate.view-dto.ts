@@ -1,10 +1,10 @@
 //базовый класс view модели для запросов за списком с пагинацией
 export class PaginatedViewDto<T> {
-  items: T;
-  totalCount: number;
   pagesCount: number;
   page: number;
   pageSize: number;
+  totalCount: number;
+  items: T;
 
   //статический метод-утилита для мапинга
   public static mapToView<T>(data: {

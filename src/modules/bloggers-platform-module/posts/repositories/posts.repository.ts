@@ -1,36 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostDocument } from '../schemas/post.schema';
+import { Post, PostDocument, PostModelType } from '../schemas/post.schema';
 import { Model, Types } from 'mongoose';
-import { PostCreateDto } from '../dto/post-create.dto';
-import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
 import { PostUpdateDto } from '../dto/post-update.dto';
 
 @Injectable()
 export class PostsRepository {
-  constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
+  constructor(
+    @InjectModel(Post.name)
+    private PostModel: PostModelType,
+  ) {}
 
-  async create(
-    createPostDto: PostCreateDto,
-    blogName: string,
-  ): Promise<PostDocument> {
-    return await this.postModel.create({
-      title: createPostDto.title,
-      shortDescription: createPostDto.shortDescription,
-      content: createPostDto.content,
-      blogId: createPostDto.blogId,
-      blogName: blogName,
-      // extendedLikesInfo: {},
-      extendedLikesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: LikeStatus.NONE,
-      },
-    });
+  async save(post: PostDocument) {
+    return post.save();
   }
 
-  async update(id: string, postDto: PostUpdateDto): Promise<PostDocument | null> {
-    return await this.postModel.findOneAndUpdate(
+  async update(
+    id: string,
+    postDto: PostUpdateDto,
+  ): Promise<PostDocument | null> {
+    return await this.PostModel.findOneAndUpdate(
       { _id: id },
       {
         title: postDto.title,
@@ -42,8 +31,6 @@ export class PostsRepository {
   }
 
   async delete(id: string): Promise<PostDocument | null> {
-    return await this.postModel.findByIdAndDelete({
-      _id: new Types.ObjectId(id),
-    });
+    return await this.PostModel.findByIdAndDelete(id);
   }
 }

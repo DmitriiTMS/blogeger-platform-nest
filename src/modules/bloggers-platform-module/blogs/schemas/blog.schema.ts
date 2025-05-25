@@ -28,6 +28,7 @@ export class Blog {
   }
 
   update(dto: CreateAndUpdateBlogtDto) {
+  
     if (
       dto.name !== this.name ||
       dto.description !== this.description ||
@@ -36,6 +37,8 @@ export class Blog {
       this.name = dto.name;
       this.description = dto.description;
       this.websiteUrl = dto.websiteUrl;
+    } else {
+      throw new Error('не переданно правильно dto')
     }
   }
   

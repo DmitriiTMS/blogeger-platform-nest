@@ -1,21 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { CommentsRepository } from '../repositories/comments.repository';
 
 @Injectable()
 export class CommentsService {
+
+  constructor(
+    private commentsRepository:CommentsRepository
+  ){}
+
   async getOne(id: string) {
-    return {
-      id,
-      content: 'content',
-      commentatorInfo: {
-        userId: 'userId',
-        userLogin: 'userLogin',
-      },
-      createdAt: '2025-05-24T09:55:41.545Z',
-      likesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: 'None',
-      },
-    };
+    const comment = await this.commentsRepository.getOneCommentById(id);
+    return comment
   }
 }
