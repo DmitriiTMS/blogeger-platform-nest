@@ -6,16 +6,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreatePostByBlogIdDto } from '../dto/create-post-by-blogId.dto';
 import { PostsRepository } from '../../posts/repositories/posts.repository';
 import { Post, PostModelType } from '../../posts/schemas/post.schema';
+import { PostsService } from '../../posts/services/posts.service';
 
 @Injectable()
 export class BlogsService {
   constructor(
     @InjectModel(Blog.name)
     private BlogModel: BlogModelType,
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
+    private postsService: PostsService,
     private blogsRepository: BlogsRepository,
-    private postsRepository: PostsRepository,
   ) {}
 
   async createBlog(createBlogDto: CreateAndUpdateBlogtDto): Promise<string> {
@@ -34,7 +33,7 @@ export class BlogsService {
     await this.blogsRepository.save(blog);
   }
 
-  async deleteBlog(id: string): Promise<BlogDocument | null> {
+  async deleteBlog(id: string) {
     return await this.blogsRepository.delete(id);
   }
 
@@ -42,21 +41,6 @@ export class BlogsService {
     blogId: string,
     postByBlogIdDto: CreatePostByBlogIdDto,
   ): Promise<string> {
-    const blog = await this.blogsRepository.getOne(blogId);
-    if (!blog) {
-      throw new NotFoundException(`Blog by ${blogId} not found`);
-    }
-    const post = this.PostModel.createInstance(
-      {
-        title: postByBlogIdDto.title,
-        shortDescription: postByBlogIdDto.shortDescription,
-        content: postByBlogIdDto.content,
-      },
-      blogId,
-      blog.name,
-    );
-
-    await this.postsRepository.save(post);
-    return post._id.toString();
+    return await this.postsService.createPost({ ...postByBlogIdDto, blogId });
   }
 }

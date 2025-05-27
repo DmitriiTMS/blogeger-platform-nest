@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { ExtendedLikesInfo, ExtendedLikesInfoSchema, LikeStatus } from './extendedLikesInfo.schema';
-import { BlogDocument } from '../../blogs/schemas/blog.schema';
 import { PostCreateDto } from '../dto/post-create.dto';
 
 @Schema({ timestamps: true })
@@ -25,20 +24,18 @@ export class Post {
   extendedLikesInfo: ExtendedLikesInfo
 
   createdAt: Date;
-
   
-  static createInstance(dto: PostCreateDto, blogId: string, blogName: string): PostDocument {
+  static createInstance(dto: PostCreateDto, blogName: string): PostDocument {
     const post = new this();
 
     post.title = dto.title,
     post.shortDescription = dto.shortDescription
     post.content = dto.content
-    post.blogId = blogId
+    post.blogId = dto.blogId
     post.blogName = blogName
     post.extendedLikesInfo = {
         likesCount: 0,
         dislikesCount: 0,
-        myStatus: LikeStatus.NONE
     };
 
     return post as PostDocument;

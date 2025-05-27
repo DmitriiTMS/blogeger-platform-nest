@@ -28,7 +28,6 @@ export class Blog {
   }
 
   update(dto: CreateAndUpdateBlogtDto) {
-  
     if (
       dto.name !== this.name ||
       dto.description !== this.description ||

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument, PostModelType } from '../schemas/post.schema';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { PostUpdateDto } from '../dto/post-update.dto';
 
 @Injectable()
@@ -30,7 +30,15 @@ export class PostsRepository {
     );
   }
 
-  async delete(id: string): Promise<PostDocument | null> {
-    return await this.PostModel.findByIdAndDelete(id);
+  async delete(id: string) {
+    const post = await this.PostModel.findById(id);
+    if(!post) {
+      throw new NotFoundException(`Post by ${id} not found`)
+    }
+    return await this.PostModel.deleteOne(new Types.ObjectId(id));
+  }
+
+  async findPost(id: string) {
+    return await this.PostModel.findById(id);
   }
 }

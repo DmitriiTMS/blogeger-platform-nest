@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   Post,
   Put,
@@ -48,15 +47,14 @@ export class PostsController {
   @Put(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateOnePost(@Param('id') id: string, @Body() body: PostUpdateDto) {
-    const post = await this.postsService.updatePost(id, body);
-    if (!post) throw new NotFoundException(`Post by ${id} not found`);
+   return await this.postsService.updatePost(id, body);
+
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOneBlog(@Param('id') id: string) {
-    const post = await this.postsService.deletePost(id);
-    if (!post) throw new NotFoundException(`Post by ${id} not found`);
+    return await this.postsService.deletePost(id);
   }
 
   @Get(':postId/comments')

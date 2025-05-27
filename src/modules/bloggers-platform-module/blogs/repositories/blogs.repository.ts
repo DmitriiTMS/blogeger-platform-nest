@@ -8,7 +8,7 @@ export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
 
   async save(blog: BlogDocument) {
-    await blog.save();
+    return blog.save();
   }
 
   async getByIdOrNotFoundFail(id: string): Promise<BlogDocument> {
@@ -19,8 +19,12 @@ export class BlogsRepository {
     return blog;
   }
 
-  async delete(id: string): Promise<BlogDocument | null> {
-    return await this.blogModel.findByIdAndDelete(id);
+  async delete(id: string) {
+    const blog = await this.getOne(id);
+    if(!blog) {
+      throw new NotFoundException(`Blog ${id} not found`)
+    }
+    return await this.blogModel.deleteOne(new Types.ObjectId(id));
   }
 
    async getOne(id: string): Promise<BlogDocument | null> {

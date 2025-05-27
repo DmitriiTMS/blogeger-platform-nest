@@ -63,8 +63,7 @@ export class BlogsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOneBlog(@Param('id') id: string) {
-    const blog = await this.blogsService.deleteBlog(id);
-    if (!blog) throw new NotFoundException(`Blog by ${id} not found`);
+    return await this.blogsService.deleteBlog(id);
   }
 
   @Get(':blogId/posts')

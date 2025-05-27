@@ -16,17 +16,18 @@ export class PostsService {
   ) {}
 
   async createPost(createPostDto: PostCreateDto) {
-    const blog = await this.blogsRepository.getOne(createPostDto.blogId!);
+    const blog = await this.blogsRepository.getOne(createPostDto.blogId);
     if (!blog) {
       throw new NotFoundException(`Blog by ${createPostDto.blogId} not found`);
     }
+
     const post = this.PostModel.createInstance(
       {
         title: createPostDto.title,
         shortDescription: createPostDto.shortDescription,
         content: createPostDto.content,
+        blogId: createPostDto.blogId,
       },
-      createPostDto.blogId!,
       blog.name,
     );
     await this.postsRepository.save(post);
@@ -36,11 +37,15 @@ export class PostsService {
   async updatePost(
     id: string,
     postDto: PostUpdateDto,
-  ): Promise<PostDocument | null> {
+  ) {
+    const post = await this.postsRepository.findPost(id);
+    if (!post) {
+      throw new NotFoundException(`Post by ${id} not found`);
+    }
     return await this.postsRepository.update(id, postDto);
   }
 
-  async deletePost(id: string): Promise<PostDocument | null> {
+  async deletePost(id: string) {
     return await this.postsRepository.delete(id);
   }
 }

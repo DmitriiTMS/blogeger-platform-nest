@@ -6,6 +6,7 @@ import { PostViewDto } from '../dto/view-dto/post.view-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { GetPostsQueryParams } from '../paginate/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -27,9 +28,11 @@ export class PostsQueryRepository {
       .limit(query.pageSize);
 
     const totalCount = await this.postModel.countDocuments();
+    // запрос к статусу в бд
+    const status = LikeStatus.NONE
 
     const items = postsDB.map((post) =>
-      PostViewDto.mapToView(post, listReactions),
+      PostViewDto.mapToView(post, listReactions, status),
     );
 
     return PaginatedViewDto.mapToView({
@@ -78,13 +81,6 @@ export class PostsQueryRepository {
       page: query.pageNumber,
       size: query.pageSize,
     });
-
-    // const listReactions = [
-    //   { addedAt: '2025-05-25T06:11:54.055Z', userId: 'userId', login: 'login' },
-    // ];
-    // const postsDB = await this.postModel.find({postId});
-    // const posts = postsDB.map((post) =>PostViewDto.mapToView(post, listReactions));
-    // return posts;
   }
 
   async getAllWithReactions(
@@ -105,9 +101,11 @@ export class PostsQueryRepository {
       .limit(query.pageSize);
 
     const totalCount = await this.postModel.countDocuments({blogId});
+ // запрос к статусу в бд
+    const status = LikeStatus.NONE
 
     const items = postsDB.map((post) =>
-      PostViewDto.mapToView(post, listReactions),
+      PostViewDto.mapToView(post, listReactions,status),
     );
 
     return PaginatedViewDto.mapToView({
@@ -125,6 +123,9 @@ export class PostsQueryRepository {
     const post = await this.postModel.findById(id);
     if (!post) throw new NotFoundException(`Post by ${id} not found`);
 
-    return PostViewDto.mapToView(post, listReactions);
+    // запрос к статусу в бд
+    const status = LikeStatus.NONE
+
+    return PostViewDto.mapToView(post, listReactions, status);
   }
 }
