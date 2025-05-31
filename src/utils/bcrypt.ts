@@ -9,4 +9,8 @@ export class Bcrypt {
   static async checkPassword(password: string, hash: string) {
     return bcrypt.compare(password, hash);
   }
+
+   static async comparePasswords(args: { password: string; hash: string }): Promise<boolean> {
+    return bcrypt.compare(args.password, args.hash);
+  }
 }

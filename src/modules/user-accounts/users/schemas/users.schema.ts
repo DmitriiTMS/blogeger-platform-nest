@@ -11,7 +11,7 @@ export class User {
   login: string;
 
   @Prop({ type: String, required: true })
-  password: string;
+  hashPassword: string;
 
   @Prop({ type: String, required: true })
   email: string;
@@ -25,7 +25,7 @@ export class User {
     const user = new this();
     user.login = dto.login
     user.email = dto.email
-    user.password = dto.password
+    user.hashPassword = dto.password
     user.emailConfirmation = emailConfirmation
     return user as UserDocument;
   }

@@ -5,6 +5,10 @@ import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SETTINGS } from 'src/core/settings';
+import { UserLoginDto } from '../dto/user-login.dto';
+import { UsersRepository } from '../repositories/users.repository';
+import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
+import { Bcrypt } from 'src/utils/bcrypt';
 
 const emailExamples = {
   registrationEmail(code: string) {
@@ -19,11 +23,15 @@ const emailExamples = {
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private mailService: MailerService
+    private mailService: MailerService,
+    private usersRepository: UsersRepository,
   ) {}
 
-  async registerUser(userCreateDto: UserCreateDto) {
+  async loginUser(userLoginDto: UserLoginDto) {
 
+  }
+
+  async registerUser(userCreateDto: UserCreateDto) {
     const uuid = randomUUID();
     const emailConfirmation = {
       confirmationCode: uuid,
@@ -36,12 +44,31 @@ export class AuthService {
 
     await this.usersService.createUser(userCreateDto, emailConfirmation);
 
-    this.mailService.sendMail({
-      from: SETTINGS.MAIL.EMAIL,
-      to: userCreateDto.email,
-      subject: "Your code is here",
-      html: emailExamples.registrationEmail(uuid)
-    }).catch((er) => console.error("error in send email:", er));
+    this.mailService
+      .sendMail({
+        from: SETTINGS.MAIL.EMAIL,
+        to: userCreateDto.email,
+        subject: 'Your code is here',
+        html: emailExamples.registrationEmail(uuid),
+      })
+      .catch((er) => console.error('error in send email:', er));
+  }
 
+  async validateUser(loginOrEmail: string, password: string) {
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await Bcrypt.comparePasswords({
+      password,
+      hash: user.hashPassword,
+    });
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const { hashPassword, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 }

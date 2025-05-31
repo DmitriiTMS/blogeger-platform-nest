@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UserCreateDto } from '../dto/user-create.dto';
 import { User, UserDocument } from '../schemas/users.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -22,11 +21,18 @@ export class UsersRepository {
     return await this.userModel.findOne({ _id: new Types.ObjectId(id) });
   }
 
-  async findByEmail(email: string) {
-    return await this.userModel.findOne({email})
+  async findByEmail(email: string):Promise<UserDocument | null> {
+    return await this.userModel.findOne({ email }).lean<UserDocument>();
   }
 
-  async findByLogin(login: string) {
-    return await this.userModel.findOne({login})
+  async findByLogin(login: string):Promise<UserDocument | null> {
+    return await this.userModel.findOne({ login }).lean<UserDocument>();
   }
+
+  async findByLoginOrEmail(loginOrEmail: string):Promise<UserDocument | null> {
+    return await this.userModel.findOne({
+      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
+    }).lean<UserDocument>();
+  }
+  
 }
