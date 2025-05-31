@@ -21,4 +21,12 @@ export class UsersRepository {
   async getOne(id: string): Promise<UserDocument | null> {
     return await this.userModel.findOne({ _id: new Types.ObjectId(id) });
   }
+
+  async findByEmail(email: string) {
+    return await this.userModel.findOne({email})
+  }
+
+  async findByLogin(login: string) {
+    return await this.userModel.findOne({login})
+  }
 }

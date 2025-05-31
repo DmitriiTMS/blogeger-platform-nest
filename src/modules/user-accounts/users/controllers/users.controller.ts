@@ -5,13 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   Post,
   Query,
 } from '@nestjs/common';
 import { UserCreateDto } from '../dto/user-create.dto';
-import { User } from '../schemas/users.schema';
 import { UsersService } from '../services/users.service';
 import { UsersQueryRepository } from '../repositories/users-query.repository';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';

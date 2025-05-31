@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Param,
   Post,
   Put,
@@ -23,6 +22,7 @@ import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dt
 import { GetPostsQueryParams } from '../../posts/paginate/get-posts-query-params.input-dto';
 
 @Controller('blogs')
+
 export class BlogsController {
   constructor(
     private blogsService: BlogsService,
