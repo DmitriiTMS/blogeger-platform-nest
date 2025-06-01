@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { UsersController } from './users/controllers/users.controller';
 import { UsersService } from './users/services/users.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -14,10 +14,18 @@ import { LocalStrategy } from './users/strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './users/strategies/jwt.strategy';
 import { AuthQueryRepository } from './users/repositories/auth-query.repository';
+import {
+  AccessToApi,
+  AccessToApiSchema,
+} from './users/schemas/access-to-api.schema';
+import { ApiLoggerMiddleware } from './users/middlewares/apiLoggerMiddleware';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: AccessToApi.name, schema: AccessToApiSchema },
+    ]),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.mail.ru',
@@ -48,7 +56,20 @@ import { AuthQueryRepository } from './users/repositories/auth-query.repository'
     AuthService,
     LocalStrategy,
     JwtStrategy,
-    AuthQueryRepository
+    AuthQueryRepository,
+    ApiLoggerMiddleware
   ],
 })
-export class UserAccountsModule {}
+export class UserAccountsModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ApiLoggerMiddleware)
+      .forRoutes(
+        {path: 'auth/password-recovery', method: RequestMethod.POST},
+        {path: 'auth/new-password', method: RequestMethod.POST},
+        {path: 'auth/registration-confirmation', method: RequestMethod.POST},
+        {path: 'auth/registration', method: RequestMethod.POST},
+        {path: 'auth/registration-email-resending', method: RequestMethod.POST},
+      ); 
+  }
+}
