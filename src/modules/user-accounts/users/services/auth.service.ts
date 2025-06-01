@@ -9,6 +9,8 @@ import { UsersRepository } from '../repositories/users.repository';
 import { Bcrypt } from 'src/utils/bcrypt';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 import { JwtService } from '@nestjs/jwt';
+import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
+import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 
 const emailExamples = {
   registrationEmail(code: string) {
@@ -16,6 +18,15 @@ const emailExamples = {
              <p>To finish registration please follow the link below:<br>
                 <a href='https://some-front.com/confirm-registration?code=${code}'>complete registration</a>
             </p>`;
+  },
+};
+
+const emailPasswordRecovery = {
+  passwordEmail(recoveryCode: string) {
+    return `<h1>Password recovery</h1>
+       <p>To finish password recovery please follow the link below:
+          <a href='https://somesite.com/password-recovery?recoveryCode=${recoveryCode}'>recovery password</a>
+      </p>`;
   },
 };
 
@@ -59,6 +70,32 @@ export class AuthService {
         html: emailExamples.registrationEmail(uuid),
       })
       .catch((er) => console.error('error in send email:', er));
+  }
+
+  async passwordRecovery(email: string) {
+    const user = await this.usersRepository.findByEmail(email);
+    if (!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by ${email} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+    const recoveryCode = randomUUID();
+
+    this.mailService
+      .sendMail({
+        from: SETTINGS.MAIL.EMAIL,
+        to: email,
+        subject: 'Your code is here',
+        html: emailPasswordRecovery.passwordEmail(recoveryCode),
+      })
+      .catch((er) => console.error('error in send email:', er));
+
+    await this.usersRepository.updateUserСonfirmationCode(
+      user._id.toString(),
+      recoveryCode,
+    );
   }
 
   async validateUser(

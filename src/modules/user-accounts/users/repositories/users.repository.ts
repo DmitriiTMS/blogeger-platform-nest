@@ -21,18 +21,30 @@ export class UsersRepository {
     return await this.userModel.findOne({ _id: new Types.ObjectId(id) });
   }
 
-  async findByEmail(email: string):Promise<UserDocument | null> {
+  async findByEmail(email: string): Promise<UserDocument | null> {
     return await this.userModel.findOne({ email }).lean<UserDocument>();
   }
 
-  async findByLogin(login: string):Promise<UserDocument | null> {
+  async findByLogin(login: string): Promise<UserDocument | null> {
     return await this.userModel.findOne({ login }).lean<UserDocument>();
   }
 
-  async findByLoginOrEmail(loginOrEmail: string):Promise<UserDocument | null> {
-    return await this.userModel.findOne({
-      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
-    }).lean<UserDocument>();
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
+    return await this.userModel
+      .findOne({
+        $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
+      })
+      .lean<UserDocument>();
   }
-  
+
+  async updateUserСonfirmationCode(id: string, code: string) {
+    return await this.userModel.updateOne(
+      { _id: id },
+      {
+        $set: {
+          'emailConfirmation.confirmationCode': code,
+        },
+      },
+    );
+  }
 }

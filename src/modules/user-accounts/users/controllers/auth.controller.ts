@@ -14,6 +14,7 @@ import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AuthQueryRepository } from '../repositories/auth-query.repository';
 import { UserGetMeViewDto } from '../dto/viewsDto/getMe-view.dto';
+import { PasswordRecoveryDto } from '../dto/password-recovery.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -34,6 +35,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async getMe(@Request() req): Promise<UserGetMeViewDto> {
     return await this.authQueryRepository.getMe(req.user.userId)
+  }
+
+  
+  @Post('password-recovery')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async passwordRecovery(@Body() body: PasswordRecoveryDto) {
+    return await this.authService.passwordRecovery(body.email)
   }
 
   @Post('registration')
