@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { IsEmail, IsNotEmpty, Length, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 import { Trim } from './trim..decorator';
 
 export const EmailApplyDecorator = (regex: RegExp) =>

@@ -5,7 +5,7 @@ import { UsersRepository } from '../repositories/users.repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { Bcrypt } from 'src/utils/bcrypt';
 import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
-import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
+
 
 @Injectable()
 export class UsersService {

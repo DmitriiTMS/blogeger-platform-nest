@@ -11,6 +11,7 @@ import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
+import { NewPasswordDto } from '../dto/new-password.dto';
 
 const emailExamples = {
   registrationEmail(code: string) {
@@ -39,7 +40,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async loginUser(userViewDto: UserViewDto) {
+  async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string }> {
     const accessToken = this.jwtService.sign({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
@@ -95,6 +96,35 @@ export class AuthService {
     await this.usersRepository.updateUserСonfirmationCode(
       user._id.toString(),
       recoveryCode,
+    );
+  }
+
+  async newPassword(newPasswordDto: NewPasswordDto) {
+    const user = await this.usersRepository.findBYCodeEmail(
+      newPasswordDto.recoveryCode,
+    );
+    if (!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by ${newPasswordDto.recoveryCode} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+    if (user.emailConfirmation.expirationDate < new Date()) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: 'Confirmation recoveryCode expired',
+            field: 'recoveryCode',
+          },
+        ],
+      });
+    }
+
+    const passwordHash = await Bcrypt.generateHash(newPasswordDto.newPassword);
+     await this.usersRepository.updateUserPassword(
+      user._id.toString(),
+      passwordHash
     );
   }
 

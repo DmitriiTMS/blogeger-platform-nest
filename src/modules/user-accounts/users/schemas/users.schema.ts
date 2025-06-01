@@ -3,8 +3,6 @@ import { HydratedDocument, Model } from 'mongoose';
 import { UserCreateDto } from '../dto/user-create.dto';
 
 
-
-
 @Schema({ timestamps: true })
 export class User {
   @Prop({ type: String, required: true })
@@ -19,7 +17,11 @@ export class User {
   createdAt: Date;
 
   @Prop({ type: Object })
-  emailConfirmation: Object
+  emailConfirmation: {
+    confirmationCode: string,
+    expirationDate: Date,
+    isConfirmed: boolean
+  }
 
   static createInstance(dto: UserCreateDto, emailConfirmation?: any):UserDocument {
     const user = new this();
