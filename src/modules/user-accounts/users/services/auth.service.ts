@@ -5,10 +5,10 @@ import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SETTINGS } from 'src/core/settings';
-import { UserLoginDto } from '../dto/user-login.dto';
 import { UsersRepository } from '../repositories/users.repository';
-import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
 import { Bcrypt } from 'src/utils/bcrypt';
+import { UserViewDto } from '../dto/viewsDto/user-view.dto';
+import { JwtService } from '@nestjs/jwt';
 
 const emailExamples = {
   registrationEmail(code: string) {
@@ -25,10 +25,17 @@ export class AuthService {
     private usersService: UsersService,
     private mailService: MailerService,
     private usersRepository: UsersRepository,
+    private jwtService: JwtService,
   ) {}
 
-  async loginUser(userLoginDto: UserLoginDto) {
-
+  async loginUser(userViewDto: UserViewDto) {
+    const accessToken = this.jwtService.sign({
+      userId: userViewDto.id,
+      userLogin: userViewDto.login,
+    });
+    return {
+      accessToken,
+    };
   }
 
   async registerUser(userCreateDto: UserCreateDto) {
@@ -54,7 +61,10 @@ export class AuthService {
       .catch((er) => console.error('error in send email:', er));
   }
 
-  async validateUser(loginOrEmail: string, password: string) {
+  async validateUser(
+    loginOrEmail: string,
+    password: string,
+  ): Promise<UserViewDto | null> {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
     if (!user) {
       return null;
@@ -68,7 +78,7 @@ export class AuthService {
       return null;
     }
 
-    const { hashPassword, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    const userView = UserViewDto.mapToView(user);
+    return userView;
   }
 }

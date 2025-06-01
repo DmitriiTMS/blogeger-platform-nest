@@ -36,6 +36,8 @@ export class CustomDomainHttpExceptionsFilter implements ExceptionFilter {
         return HttpStatus.BAD_REQUEST;
       case DomainExceptionCode.NotFound:
         return HttpStatus.NOT_FOUND;
+      case DomainExceptionCode.Unauthorized:
+        return HttpStatus.UNAUTHORIZED;
       default:
         return HttpStatus.I_AM_A_TEAPOT;
     }

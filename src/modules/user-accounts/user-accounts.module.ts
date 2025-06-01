@@ -11,6 +11,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { SETTINGS } from 'src/core/settings';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './users/strategies/local.strategy';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './users/strategies/jwt.strategy';
+import { AuthQueryRepository } from './users/repositories/auth-query.repository';
 
 @Module({
   imports: [
@@ -32,8 +35,20 @@ import { LocalStrategy } from './users/strategies/local.strategy';
       },
     }),
     PassportModule,
+    JwtModule.register({
+      secret: SETTINGS.JWT_ACCESS_TOKEN,
+      signOptions: { expiresIn: '6m' },
+    }),
   ],
   controllers: [UsersController, AuthController],
-  providers: [UsersService, UsersRepository, UsersQueryRepository, AuthService, LocalStrategy],
+  providers: [
+    UsersService,
+    UsersRepository,
+    UsersQueryRepository,
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    AuthQueryRepository
+  ],
 })
 export class UserAccountsModule {}

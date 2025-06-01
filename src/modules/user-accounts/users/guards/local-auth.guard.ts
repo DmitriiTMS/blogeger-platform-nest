@@ -12,7 +12,7 @@ export class LocalAuthGuard extends AuthGuard('local') {
     const request = context.switchToHttp().getRequest();
     const body = request.body;
 
-    // Валидация DTO через подкл. глобадьный pipes
+    // Валидация DTO через подкл. глобальный pipes
     const login = plainToClass(UserLoginDto, body);
     const errors = await validate(login);
     const formattedErrors = errorFormatter(errors);
