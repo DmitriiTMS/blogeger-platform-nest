@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 
-
 @Schema({ timestamps: true })
 export class AccessToApi {
-
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   url: string;
 
+  @Prop({ type: String })
+  ip: string;
 }
 export const AccessToApiSchema = SchemaFactory.createForClass(AccessToApi);
 
@@ -18,4 +18,5 @@ AccessToApiSchema.loadClass(AccessToApi);
 export type AccessToApiDocument = HydratedDocument<AccessToApi>;
 
 //Типизация модели + статические методы
-export type AccessToApiModelType = Model<AccessToApiDocument> & typeof AccessToApi;
+export type AccessToApiModelType = Model<AccessToApiDocument> &
+  typeof AccessToApi;

@@ -16,8 +16,6 @@ import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dt
 import { emailExamples, emailPasswordRecovery } from '../email/email-text';
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 
-
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -48,16 +46,15 @@ export class AuthService {
       isConfirmed: false,
     };
 
-    await this.usersService.createUser(userCreateDto, emailConfirmation);
-
-    this.mailService
-      .sendMail({
-        from: SETTINGS.MAIL.EMAIL,
-        to: userCreateDto.email,
-        subject: 'Your code is here',
-        html: emailExamples.registrationEmail(uuid),
-      })
-      .catch((er) => console.error('error in send email:', er));
+    await Promise.all([
+      this.usersService.createUser(userCreateDto, emailConfirmation),
+      this.mailService.sendMail({
+          from: SETTINGS.MAIL.EMAIL,
+          to: userCreateDto.email,
+          subject: 'Your code is here',
+          html: emailExamples.registrationEmail(uuid),
+        }).catch((er) => console.error('error in send email:', er)),
+    ]);
   }
 
   async passwordRecovery(email: string) {
@@ -71,19 +68,15 @@ export class AuthService {
 
     const recoveryCode = randomUUID();
 
-    this.mailService
-      .sendMail({
+    await Promise.all([
+      this.usersRepository.updateUserСonfirmationCode(user._id.toString(),recoveryCode),
+      this.mailService.sendMail({
         from: SETTINGS.MAIL.EMAIL,
         to: email,
         subject: 'Your code is here',
         html: emailPasswordRecovery.passwordEmail(recoveryCode),
-      })
-      .catch((er) => console.error('error in send email:', er));
-
-    await this.usersRepository.updateUserСonfirmationCode(
-      user._id.toString(),
-      recoveryCode,
-    );
+      }).catch((er) => console.error('error in send email:', er))
+    ])   
   }
 
   async newPassword(newPasswordDto: NewPasswordDto) {
@@ -124,22 +117,22 @@ export class AuthService {
       });
     }
 
-    if (user.emailConfirmation.expirationDate < new Date()) {
+    if (user.emailConfirmation.isConfirmed) {
       throw new CustomDomainException({
         errorsMessages: [
           {
-            message: 'Confirmation recoveryCode expired',
+            message: 'Confirmation code confirmed',
             field: 'code',
           },
         ],
       });
     }
 
-    if (user.emailConfirmation.isConfirmed) {
+    if (user.emailConfirmation.expirationDate < new Date()) {
       throw new CustomDomainException({
         errorsMessages: [
           {
-            message: 'Confirmation code confirmed',
+            message: 'Confirmation recoveryCode expired',
             field: 'code',
           },
         ],
@@ -153,12 +146,16 @@ export class AuthService {
     const user = await this.usersRepository.findByEmail(regEmailResDto.email);
     if (!user) {
       throw new CustomDomainException({
-        errorsMessages: `User by ${regEmailResDto.email} not found`,
-        customCode: DomainExceptionCode.NotFound,
+        errorsMessages: [
+          {
+            message: `User by ${regEmailResDto.email} not found`,
+            field: 'email',
+          },
+        ],
       });
     }
 
-     if (user.emailConfirmation.isConfirmed) {
+    if (user.emailConfirmation.isConfirmed) {
       throw new CustomDomainException({
         errorsMessages: [
           {
@@ -170,20 +167,16 @@ export class AuthService {
     }
 
     const newConfirmationCode = randomUUID();
-    await this.usersRepository.updateUserСonfirmationCode(
-      user._id.toString(),
-      newConfirmationCode
-    );
 
-     this.mailService
-      .sendMail({
-        from: SETTINGS.MAIL.EMAIL,
-        to: regEmailResDto.email,
-        subject: 'Your code is here',
-        html: emailExamples.registrationEmail(newConfirmationCode),
-      })
-      .catch((er) => console.error('error in send email:', er));
-    
+    await Promise.all([
+        this.usersRepository.updateUserСonfirmationCode(user._id.toString(),newConfirmationCode),
+        this.mailService.sendMail({
+            from: SETTINGS.MAIL.EMAIL,
+            to: regEmailResDto.email,
+            subject: 'Your code is here',
+            html: emailExamples.registrationEmail(newConfirmationCode),
+      }).catch((er) => console.error('error in send email:', er))
+    ])    
   }
 
   async validateUser(

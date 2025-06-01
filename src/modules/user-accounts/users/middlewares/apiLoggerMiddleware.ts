@@ -11,22 +11,23 @@ export class ApiLoggerMiddleware implements NestMiddleware {
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const originalUrl = req.originalUrl;
 
     const logEntry = {
-    //   ip: userIp,
+      // ip: userIp,
       url: originalUrl,
-      date: new Date(),
+      // date: new Date(),
     };
 
-    await this.accessToApiModel.insertOne(logEntry);
+    await this.accessToApiModel.create(logEntry);
 
     const tenSecondsAgo = new Date(Date.now() - 10 * 1000);
     const count = await this.accessToApiModel.countDocuments({
       // ip: logEntry.ip,
       url: logEntry.url,
-      date: { $gte: tenSecondsAgo },
+      // date: { $gte: tenSecondsAgo },
+      createdAt: { $gte: tenSecondsAgo },
     });
 
     console.log('Count apiLoggerMiddleware = ', count);
@@ -35,7 +36,6 @@ export class ApiLoggerMiddleware implements NestMiddleware {
       res.sendStatus(429);
       return;
     }
-
     next();
   }
 }

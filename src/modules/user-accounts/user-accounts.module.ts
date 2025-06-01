@@ -60,16 +60,17 @@ import { ApiLoggerMiddleware } from './users/middlewares/apiLoggerMiddleware';
     ApiLoggerMiddleware
   ],
 })
+
 export class UserAccountsModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(ApiLoggerMiddleware)
-      .forRoutes(
-        {path: 'auth/password-recovery', method: RequestMethod.POST},
-        {path: 'auth/new-password', method: RequestMethod.POST},
-        {path: 'auth/registration-confirmation', method: RequestMethod.POST},
-        {path: 'auth/registration', method: RequestMethod.POST},
-        {path: 'auth/registration-email-resending', method: RequestMethod.POST},
-      ); 
-  }
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //     .apply(ApiLoggerMiddleware)
+  //     .forRoutes(
+  //       {path: 'auth/password-recovery', method: RequestMethod.POST},
+  //       {path: 'auth/new-password', method: RequestMethod.POST},
+  //       {path: 'auth/registration-confirmation', method: RequestMethod.POST},
+  //       {path: 'auth/registration', method: RequestMethod.POST},
+  //       {path: 'auth/registration-email-resending', method: RequestMethod.POST},
+  //     ); 
+  // }
 }

@@ -10,6 +10,7 @@ import {
   PostSchema,
 } from '../bloggers-platform-module/posts/schemas/post.schema';
 import { User, UserSchema } from '../user-accounts/users/schemas/users.schema';
+import { AccessToApi, AccessToApiSchema } from '../user-accounts/users/schemas/access-to-api.schema';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { User, UserSchema } from '../user-accounts/users/schemas/users.schema';
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: User.name, schema: UserSchema },
+      { name: AccessToApi.name, schema: AccessToApiSchema },
     ]),
   ],
   controllers: [TestingController],
