@@ -3,7 +3,6 @@ import { User, UserDocument } from '../schemas/users.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-
 @Injectable()
 export class UsersRepository {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
@@ -39,30 +38,52 @@ export class UsersRepository {
   }
 
   async updateUserСonfirmationCode(id: string, code: string) {
-    return await this.userModel.updateOne(
-      { _id: id },
-      {
-        $set: {
-          'emailConfirmation.confirmationCode': code,
+    return await this.userModel
+      .updateOne(
+        { _id: id },
+        {
+          $set: {
+            'emailConfirmation.confirmationCode': code,
+          },
         },
-      },
-    ).lean();
+      )
+      .lean();
   }
 
-   async findBYCodeEmail(code: string): Promise<UserDocument | null> {
-    return await this.userModel.findOne({
-      "emailConfirmation.confirmationCode": code,
-    }).lean<UserDocument>();
+  async findBYCodeEmail(code: string): Promise<UserDocument | null> {
+    return await this.userModel
+      .findOne({
+        'emailConfirmation.confirmationCode': code,
+      })
+      .lean<UserDocument>();
   }
 
-   async updateUserPassword(id: string, password: string): Promise<UserDocument | null> {
-    return await this.userModel.updateOne(
-      { _id: id },
-      {
-        $set: {
-          hashPassword: password,
+  async updateUserPassword(
+    id: string,
+    password: string,
+  ): Promise<UserDocument | null> {
+    return await this.userModel
+      .updateOne(
+        { _id: id },
+        {
+          $set: {
+            hashPassword: password,
+          },
         },
-      }
-    ).lean<UserDocument>();
+      )
+      .lean<UserDocument>();
+  }
+
+  async updateUserIsConfirmed(id: string): Promise<UserDocument | null> {
+    return await this.userModel
+      .updateOne(
+        { _id: id },
+        {
+          $set: {
+            'emailConfirmation.isConfirmed': true,
+          },
+        },
+      )
+      .lean<UserDocument>();
   }
 }

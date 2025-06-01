@@ -16,6 +16,8 @@ import { AuthQueryRepository } from '../repositories/auth-query.repository';
 import { UserGetMeViewDto } from '../dto/viewsDto/getMe-view.dto';
 import { PasswordRecoveryDto } from '../dto/password-recovery.dto';
 import { NewPasswordDto } from '../dto/new-password.dto';
+import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
+import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -43,10 +45,22 @@ export class AuthController {
     return await this.authService.newPassword(body);
   }
 
+  @Post('registration-confirmation')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async registrationConfirmation(@Body() body: RegistrationConfirmationDto) {
+    return await this.authService.registrationConfirmation(body)
+  }
+
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async register(@Body() body: UserCreateDto) {
     return await this.authService.registerUser(body);
+  }
+
+  @Post('registration-email-resending')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async registrationEmailResending(@Body() body: RegistrationEmailEesendingDto) {
+    return await this.authService.registrationEmailResending(body)
   }
 
   @Get('me')

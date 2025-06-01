@@ -12,24 +12,11 @@ import { JwtService } from '@nestjs/jwt';
 import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 import { NewPasswordDto } from '../dto/new-password.dto';
+import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
+import { emailExamples, emailPasswordRecovery } from '../email/email-text';
+import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 
-const emailExamples = {
-  registrationEmail(code: string) {
-    return `<h1>Thank for your registration</h1>
-             <p>To finish registration please follow the link below:<br>
-                <a href='https://some-front.com/confirm-registration?code=${code}'>complete registration</a>
-            </p>`;
-  },
-};
 
-const emailPasswordRecovery = {
-  passwordEmail(recoveryCode: string) {
-    return `<h1>Password recovery</h1>
-       <p>To finish password recovery please follow the link below:
-          <a href='https://somesite.com/password-recovery?recoveryCode=${recoveryCode}'>recovery password</a>
-      </p>`;
-  },
-};
 
 @Injectable()
 export class AuthService {
@@ -122,10 +109,81 @@ export class AuthService {
     }
 
     const passwordHash = await Bcrypt.generateHash(newPasswordDto.newPassword);
-     await this.usersRepository.updateUserPassword(
+    await this.usersRepository.updateUserPassword(
       user._id.toString(),
-      passwordHash
+      passwordHash,
     );
+  }
+
+  async registrationConfirmation(regConfirmDto: RegistrationConfirmationDto) {
+    const user = await this.usersRepository.findBYCodeEmail(regConfirmDto.code);
+    if (!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by ${regConfirmDto.code} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+    if (user.emailConfirmation.expirationDate < new Date()) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: 'Confirmation recoveryCode expired',
+            field: 'code',
+          },
+        ],
+      });
+    }
+
+    if (user.emailConfirmation.isConfirmed) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: 'Confirmation code confirmed',
+            field: 'code',
+          },
+        ],
+      });
+    }
+
+    await this.usersRepository.updateUserIsConfirmed(user._id.toString());
+  }
+
+  async registrationEmailResending(regEmailResDto: RegistrationEmailEesendingDto) {
+    const user = await this.usersRepository.findByEmail(regEmailResDto.email);
+    if (!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by ${regEmailResDto.email} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+     if (user.emailConfirmation.isConfirmed) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: 'Confirmation code confirmed',
+            field: 'email',
+          },
+        ],
+      });
+    }
+
+    const newConfirmationCode = randomUUID();
+    await this.usersRepository.updateUserСonfirmationCode(
+      user._id.toString(),
+      newConfirmationCode
+    );
+
+     this.mailService
+      .sendMail({
+        from: SETTINGS.MAIL.EMAIL,
+        to: regEmailResDto.email,
+        subject: 'Your code is here',
+        html: emailExamples.registrationEmail(newConfirmationCode),
+      })
+      .catch((er) => console.error('error in send email:', er));
+    
   }
 
   async validateUser(
