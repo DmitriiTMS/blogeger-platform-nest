@@ -31,6 +31,7 @@ export class User {
     user.emailConfirmation = emailConfirmation
     return user as UserDocument;
   }
+  
 }
 export const UserSchema = SchemaFactory.createForClass(User);
 

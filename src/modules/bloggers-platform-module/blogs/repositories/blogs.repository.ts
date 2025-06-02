@@ -8,7 +8,8 @@ export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
 
   async save(blog: BlogDocument) {
-    return blog.save();
+    return await blog.save();
+  
   }
 
   async getByIdOrNotFoundFail(id: string): Promise<BlogDocument> {
