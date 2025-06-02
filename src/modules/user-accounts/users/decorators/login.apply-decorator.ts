@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
-import { Trim } from './trim..decorator';
+import { Trim } from './trim.decorator';
 
 export const LoginApplyDecorator = (regex: RegExp) =>
   applyDecorators(

@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, Matches } from 'class-validator';
-import { Trim } from '../decorators/trim..decorator';
+import { Trim } from '../decorators/trim.decorator';
 
 export class RegistrationConfirmationDto {
   @IsNotEmpty()

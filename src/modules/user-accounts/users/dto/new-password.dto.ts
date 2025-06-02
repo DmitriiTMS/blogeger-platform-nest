@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
-import { Trim } from '../decorators/trim..decorator';
+import { Trim } from '../decorators/trim.decorator';
 import { PasswordApplyDecorator } from '../decorators/password.apply-decoratot';
 
 export class NewPasswordDto {

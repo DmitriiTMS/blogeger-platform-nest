@@ -3,8 +3,6 @@ import { UserCreateDto } from '../dto/user-create.dto';
 import { UsersService } from './users.service';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
-import { MailerService } from '@nestjs-modules/mailer';
-import { SETTINGS } from 'src/core/settings';
 import { UsersRepository } from '../repositories/users.repository';
 import { Bcrypt } from 'src/utils/bcrypt';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
@@ -13,23 +11,22 @@ import { CustomDomainException } from 'src/setup/exceptions/custom-domain.except
 import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 import { NewPasswordDto } from '../dto/new-password.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
-import { emailExamples, emailPasswordRecovery } from '../email/email-text';
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
+import { EmailService } from '../other-services/email.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserModelType } from '../schemas/users.schema';
 
-// Вынести в отдельный сервис
-//  await this.mailService.sendMail({
-//           from: SETTINGS.MAIL.EMAIL,
-//           to: userCreateDto.email,
-//           subject: 'Your code is here',
-//           html: emailExamples.registrationEmail(uuid),
-//         })
+
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectModel(User.name)
+        private UserModel: UserModelType,
     private usersService: UsersService,
-    private mailService: MailerService,
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
+    private emailService: EmailService,
+    
   ) {}
 
   async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string }> {
@@ -43,9 +40,9 @@ export class AuthService {
   }
 
   async registerUser(userCreateDto: UserCreateDto) {
-    const uuid = randomUUID();
+    const code = randomUUID();
     const emailConfirmation = {
-      confirmationCode: uuid,
+      confirmationCode: code,
       expirationDate: add(new Date(), {
         hours: 1,
         minutes: 30,
@@ -53,15 +50,9 @@ export class AuthService {
       isConfirmed: false,
     };
 
-    
-    await this.usersService.createUser(userCreateDto, emailConfirmation),
-    await this.mailService.sendMail({
-          from: SETTINGS.MAIL.EMAIL,
-          to: userCreateDto.email,
-          subject: 'Your code is here',
-          html: emailExamples.registrationEmail(uuid),
-        })
-  
+    await this.usersService.createUser(userCreateDto, emailConfirmation)
+    await this.emailService.registerUserAndResendingEmail(userCreateDto.email, code)
+   
   }
 
   async passwordRecovery(email: string) {
@@ -74,15 +65,8 @@ export class AuthService {
     }
 
     const recoveryCode = randomUUID();
-
-  
-    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(),recoveryCode),
-    await  this.mailService.sendMail({
-        from: SETTINGS.MAIL.EMAIL,
-        to: email,
-        subject: 'Your code is here',
-        html: emailPasswordRecovery.passwordEmail(recoveryCode),
-      })
+    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(), recoveryCode)
+    await this.emailService.passwordRecovery(email, recoveryCode)
     
   }
 
@@ -174,15 +158,9 @@ export class AuthService {
     }
 
     const newConfirmationCode = randomUUID();
-
-    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(),newConfirmationCode),
-    await this.mailService.sendMail({
-            from: SETTINGS.MAIL.EMAIL,
-            to: regEmailResDto.email,
-            subject: 'Your code is here',
-            html: emailExamples.registrationEmail(newConfirmationCode),
-      })
-      
+    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(),newConfirmationCode)
+    await this.emailService.registerUserAndResendingEmail(regEmailResDto.email, newConfirmationCode)
+  
   }
 
   async validateUser(

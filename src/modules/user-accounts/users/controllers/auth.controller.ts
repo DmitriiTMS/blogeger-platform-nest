@@ -18,6 +18,8 @@ import { PasswordRecoveryDto } from '../dto/password-recovery.dto';
 import { NewPasswordDto } from '../dto/new-password.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
+import { ExtractUserFromRequest } from '../decorators/extract-user-from-request.decorator';
+import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -29,8 +31,9 @@ export class AuthController {
   @Post('login')
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async login(@Request() req): Promise<{ accessToken: string }> {
-    return await this.authService.loginUser(req.user);
+  // async login(@Request() req): Promise<{ accessToken: string }> {
+  async login(@ExtractUserFromRequest() user: UserViewDto): Promise<{ accessToken: string }> {
+    return await this.authService.loginUser(user);
   }
 
   @Post('password-recovery')

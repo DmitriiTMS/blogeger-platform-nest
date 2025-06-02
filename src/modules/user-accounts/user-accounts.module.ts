@@ -19,6 +19,7 @@ import {
   AccessToApiSchema,
 } from './users/schemas/access-to-api.schema';
 import { ApiLoggerMiddleware } from './users/middlewares/apiLoggerMiddleware';
+import { EmailService } from './users/other-services/email.service';
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import { ApiLoggerMiddleware } from './users/middlewares/apiLoggerMiddleware';
     LocalStrategy,
     JwtStrategy,
     AuthQueryRepository,
-    ApiLoggerMiddleware
+    EmailService,
+    ApiLoggerMiddleware,
   ],
 })
 
