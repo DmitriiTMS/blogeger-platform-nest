@@ -3,8 +3,8 @@ import { UserCreateDto } from '../dto/user-create.dto';
 import { User, UserDocument, UserModelType } from '../schemas/users.schema';
 import { UsersRepository } from '../repositories/users.repository';
 import { InjectModel } from '@nestjs/mongoose';
-import { Bcrypt } from 'src/utils/bcrypt';
-import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
+import { Bcrypt } from '../../../../utils/bcrypt';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 
 
 @Injectable()

@@ -4,7 +4,7 @@ import { User, UserDocument } from '../schemas/users.schema';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 import { GetUsersQueryParams } from '../dto/paginate/get-users-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 
 @Injectable()
 export class UsersQueryRepository {

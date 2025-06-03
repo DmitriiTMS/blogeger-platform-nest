@@ -3,8 +3,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { plainToClass } from 'class-transformer';
 import { UserLoginDto } from '../dto/user-login.dto';
 import { validate } from 'class-validator';
-import { errorFormatter } from 'src/setup/pipes.setup';
-import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
+import { errorFormatter } from '../../../../setup/pipes.setup';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 
 @Injectable()
 export class LocalAuthGuard extends AuthGuard('local') {

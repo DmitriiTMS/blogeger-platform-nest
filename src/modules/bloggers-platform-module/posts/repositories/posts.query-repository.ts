@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostDocument } from '../schemas/post.schema';
+import { Post } from '../schemas/post.schema';
 import { Model } from 'mongoose';
 import { PostViewDto } from '../dto/view-dto/post.view-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { GetPostsQueryParams } from '../paginate/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
-import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
-import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 
 @Injectable()
 export class PostsQueryRepository {

@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
-import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
-import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()

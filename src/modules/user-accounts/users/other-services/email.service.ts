@@ -1,6 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { SETTINGS } from 'src/core/settings';
+import { SETTINGS } from '../../../../core/settings';
 import { emailExamples, emailPasswordRecovery } from '../email/email-text';
 
 @Injectable()

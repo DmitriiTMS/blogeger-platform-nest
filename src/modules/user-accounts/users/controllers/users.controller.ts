@@ -15,7 +15,7 @@ import { UsersService } from '../services/users.service';
 import { UsersQueryRepository } from '../repositories/users-query.repository';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 import { GetUsersQueryParams } from '../dto/paginate/get-users-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 import { BasicAuthGuard } from '../guards/basic-auth.guard';
 
 @Controller('users')

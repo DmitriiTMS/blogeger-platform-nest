@@ -17,7 +17,7 @@ import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
 import { CreatePostByBlogIdDto } from '../dto/create-post-by-blogId.dto';
 import { PostsQueryRepository } from '../../posts/repositories/posts.query-repository';
 import { PostViewDto } from '../../posts/dto/view-dto/post.view-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dto';
 import { GetPostsQueryParams } from '../../posts/paginate/get-posts-query-params.input-dto';
 
@@ -29,6 +29,12 @@ export class BlogsController {
     private blogsQueryRepository: BlogsQueryRepository,
     private postsQueryRepository: PostsQueryRepository
   ) {}
+
+  @Get('test')
+  @HttpCode(HttpStatus.OK)
+  async test() {
+    return 'hello';
+  }
 
   @Get()
   @HttpCode(HttpStatus.OK)
