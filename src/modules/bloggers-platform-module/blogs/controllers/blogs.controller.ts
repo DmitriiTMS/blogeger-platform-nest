@@ -30,12 +30,6 @@ export class BlogsController {
     private postsQueryRepository: PostsQueryRepository
   ) {}
 
-  @Get('test')
-  @HttpCode(HttpStatus.OK)
-  async test() {
-    return 'hello';
-  }
-
   @Get()
   @HttpCode(HttpStatus.OK)
   async getAll(@Query() query: GetBlogsQueryParams): Promise<PaginatedViewDto<BlogViewDto[]>> {
