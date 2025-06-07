@@ -9,20 +9,29 @@ export class User {
   login: string;
 
   @Prop({ type: String, required: true })
-  password: string;
+  hashPassword: string;
 
   @Prop({ type: String, required: true })
   email: string;
 
   createdAt: Date;
 
-  static createInstance(dto: UserCreateDto):UserDocument {
+  @Prop({ type: Object })
+  emailConfirmation: {
+    confirmationCode: string,
+    expirationDate: Date,
+    isConfirmed: boolean
+  }
+
+  static createInstance(dto: UserCreateDto, emailConfirmation?: any):UserDocument {
     const user = new this();
     user.login = dto.login
     user.email = dto.email
-    user.password = dto.password
+    user.hashPassword = dto.password
+    user.emailConfirmation = emailConfirmation
     return user as UserDocument;
   }
+  
 }
 export const UserSchema = SchemaFactory.createForClass(User);
 

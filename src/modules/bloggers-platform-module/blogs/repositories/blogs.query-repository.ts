@@ -4,7 +4,8 @@ import { Blog, BlogDocument, BlogModelType } from '../schemas/blog.schema';
 import { FilterQuery, Model } from 'mongoose';
 import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
 import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
+
 
 @Injectable()
 export class BlogsQueryRepository {

@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostDocument } from '../schemas/post.schema';
+import { Post } from '../schemas/post.schema';
 import { Model } from 'mongoose';
 import { PostViewDto } from '../dto/view-dto/post.view-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { GetPostsQueryParams } from '../paginate/get-posts-query-params.input-dto';
-import { PaginatedViewDto } from 'src/core/paginate/base.paginate.view-dto';
+import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -29,7 +31,7 @@ export class PostsQueryRepository {
 
     const totalCount = await this.postModel.countDocuments();
     // запрос к статусу в бд
-    const status = LikeStatus.NONE
+    const status = LikeStatus.NONE;
 
     const items = postsDB.map((post) =>
       PostViewDto.mapToView(post, listReactions, status),
@@ -100,12 +102,12 @@ export class PostsQueryRepository {
       .skip(query.calculateSkip())
       .limit(query.pageSize);
 
-    const totalCount = await this.postModel.countDocuments({blogId});
- // запрос к статусу в бд
-    const status = LikeStatus.NONE
+    const totalCount = await this.postModel.countDocuments({ blogId });
+    // запрос к статусу в бд
+    const status = LikeStatus.NONE;
 
     const items = postsDB.map((post) =>
-      PostViewDto.mapToView(post, listReactions,status),
+      PostViewDto.mapToView(post, listReactions, status),
     );
 
     return PaginatedViewDto.mapToView({
@@ -121,10 +123,14 @@ export class PostsQueryRepository {
       { addedAt: '2025-05-25T06:11:54.055Z', userId: 'userId', login: 'login' },
     ];
     const post = await this.postModel.findById(id);
-    if (!post) throw new NotFoundException(`Post by ${id} not found`);
-
+    if (!post) {
+      throw new CustomDomainException({
+        errorsMessages: `Post by ${id} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
     // запрос к статусу в бд
-    const status = LikeStatus.NONE
+    const status = LikeStatus.NONE;
 
     return PostViewDto.mapToView(post, listReactions, status);
   }
