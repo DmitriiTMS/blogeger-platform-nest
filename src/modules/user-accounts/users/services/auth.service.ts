@@ -13,15 +13,12 @@ import { NewPasswordDto } from '../dto/new-password.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 import { EmailService } from '../other-services/email.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../schemas/users.schema';
+
 
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name)
-        private UserModel: UserModelType,
     private usersService: UsersService,
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
@@ -30,7 +27,7 @@ export class AuthService {
   ) {}
 
   async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string }> {
-    const accessToken = this.jwtService.sign({
+    const accessToken = await this.jwtService.signAsync({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
     });
