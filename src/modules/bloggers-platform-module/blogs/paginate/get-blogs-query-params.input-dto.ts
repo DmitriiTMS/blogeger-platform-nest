@@ -1,4 +1,4 @@
-import { BaseQueryParams } from 'src/core/paginate/base.query-params.dto';
+import { BaseQueryParams } from '../../../../core/paginate/base.query-params.dto';
 
 export enum BlogsSortBy {
   CreatedAt = 'createdAt',

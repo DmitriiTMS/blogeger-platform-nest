@@ -14,14 +14,6 @@ export class ExtendedLikesInfo {
   @Prop({ type: Number, default: 0, required: true })
   dislikesCount: number;
 
-  // @Prop({
-  //   type: String,
-  //   enum: Object.values(LikeStatus),
-  //   default: LikeStatus.NONE,
-  //   required: true,
-  // })
-  // myStatus: LikeStatus;
-
 }
 
 export const ExtendedLikesInfoSchema =

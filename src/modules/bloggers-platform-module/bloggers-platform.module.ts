@@ -14,6 +14,7 @@ import { CommentsController } from './comments/controllers/comments.controller';
 import { CommentsService } from './comments/services/comments.service';
 import { CommentsRepository } from './comments/repositories/comments.repository';
 
+const services = [BlogsService,PostsService,CommentsService]
 
 @Module({
   imports: [
@@ -24,13 +25,11 @@ import { CommentsRepository } from './comments/repositories/comments.repository'
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
-    BlogsService,
+    ...services,
     BlogsRepository,
     BlogsQueryRepository,
-    PostsService,
     PostsRepository,
     PostsQueryRepository,
-    CommentsService,
     CommentsRepository
   ],
 })
