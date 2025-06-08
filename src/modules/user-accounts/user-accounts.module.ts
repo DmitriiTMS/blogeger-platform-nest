@@ -61,6 +61,7 @@ import { EmailService } from './users/other-services/email.service';
     EmailService,
     ApiLoggerMiddleware,
   ],
+  exports: [UsersRepository]
 })
 
 export class UserAccountsModule {

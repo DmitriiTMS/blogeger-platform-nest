@@ -13,6 +13,8 @@ import { PostsQueryRepository } from './posts/repositories/posts.query-repositor
 import { CommentsController } from './comments/controllers/comments.controller';
 import { CommentsService } from './comments/services/comments.service';
 import { CommentsRepository } from './comments/repositories/comments.repository';
+import { UserAccountsModule } from '../user-accounts/user-accounts.module';
+import { Comment, CommentSchema } from './comments/schemas/comments.schema';
 
 const services = [BlogsService,PostsService,CommentsService]
 
@@ -21,7 +23,9 @@ const services = [BlogsService,PostsService,CommentsService]
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
+      { name: Comment.name, schema: CommentSchema },
     ]),
+    UserAccountsModule
   ],
   controllers: [BlogsController, PostsController, CommentsController],
   providers: [
@@ -30,7 +34,7 @@ const services = [BlogsService,PostsService,CommentsService]
     BlogsQueryRepository,
     PostsRepository,
     PostsQueryRepository,
-    CommentsRepository
+    CommentsRepository,
   ],
 })
 export class BloggersPlatformModule {}

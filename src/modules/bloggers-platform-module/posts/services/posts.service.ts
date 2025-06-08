@@ -1,18 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostCreateDto } from '../dto/post-create.dto';
-import { Post, PostDocument, PostModelType } from '../schemas/post.schema';
+import { Post, PostModelType } from '../schemas/post.schema';
 import { PostsRepository } from '../repositories/posts.repository';
 import { PostUpdateDto } from '../dto/post-update.dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { InjectModel } from '@nestjs/mongoose';
+import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
+import mongoose from 'mongoose';
+import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users.repository';
+import { CommentsRepository } from '../../comments/repositories/comments.repository';
+import {
+  Comment,
+  CommentDocument,
+  CommentModelType,
+} from '../../comments/schemas/comments.schema';
+import { CommentViewDto } from '../../comments/dto/comment-view-dto';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name)
     private PostModel: PostModelType,
+    @InjectModel(Comment.name)
+    private CommentModel: CommentModelType,
     private postsRepository: PostsRepository,
     private blogsRepository: BlogsRepository,
+    private usersRepository: UsersRepository,
+    private commentRepository: CommentsRepository,
   ) {}
 
   async createPost(createPostDto: PostCreateDto) {
@@ -34,10 +50,7 @@ export class PostsService {
     return post._id.toString();
   }
 
-  async updatePost(
-    id: string,
-    postDto: PostUpdateDto,
-  ) {
+  async updatePost(id: string, postDto: PostUpdateDto) {
     const post = await this.postsRepository.findPost(id);
     if (!post) {
       throw new NotFoundException(`Post by ${id} not found`);
@@ -48,4 +61,48 @@ export class PostsService {
   async deletePost(id: string) {
     return await this.postsRepository.delete(id);
   }
+
+  async createCommentsByPostId(dataForCreteCommentDto: PostDataCommentCreateDto): Promise<CommentDocument> {
+    const { content, postId, userId } = dataForCreteCommentDto;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `PostId not ObjectId Mongoose`,
+            field: 'postId',
+          },
+        ],
+      });
+    }
+
+    const post = await this.postsRepository.findPost(postId);
+    if (!post) {
+      throw new CustomDomainException({
+        errorsMessages: `Post by ${postId} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+    const user = await this.usersRepository.getOne(userId);
+    if (!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by ${userId} not found`,
+        customCode: DomainExceptionCode.NotFound,
+      });
+    }
+
+    const newComment = this.CommentModel.createInstance({
+        content,
+        postId,
+        userId,
+      },
+      user.login,
+    );
+
+    await this.commentRepository.create(newComment);
+    return newComment;
+  }
+
+ 
 }

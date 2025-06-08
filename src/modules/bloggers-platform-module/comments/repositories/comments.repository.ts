@@ -1,7 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Comment, CommentDocument, CommentModelType } from '../schemas/comments.schema';
 
 @Injectable()
 export class CommentsRepository {
+  constructor(
+    @InjectModel(Comment.name)
+    private CommentModel: CommentModelType,
+  ) {}
+
+  async create(newCommentByPost: CommentDocument) {
+    await newCommentByPost.save()
+  }
+
   async getOneCommentById(id: string) {
     await this.findCommentById(id);
     return {
@@ -27,4 +38,5 @@ export class CommentsRepository {
       throw new NotFoundException(`Comments ${id} not found`);
     }
   }
+
 }
