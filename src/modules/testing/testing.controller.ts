@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { Post } from '../bloggers-platform-module/posts/schemas/post.schema';
 import { User } from '../user-accounts/users/schemas/users.schema';
 import { AccessToApi } from '../user-accounts/users/schemas/access-to-api.schema';
+import { Comment } from '../bloggers-platform-module/comments/schemas/comments.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -12,7 +13,8 @@ export class TestingController {
     @InjectModel(Blog.name) private blogModel: Model<Blog>,
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(User.name) private userModel: Model<User>,
-     @InjectModel(AccessToApi.name) private accessToApiModel: Model<AccessToApi>,
+    @InjectModel(Comment.name) private commentModel: Model<Comment>,
+    @InjectModel(AccessToApi.name) private accessToApiModel: Model<AccessToApi>,
   ) {}
 
   @Delete('all-data')
@@ -21,6 +23,7 @@ export class TestingController {
     await this.blogModel.deleteMany();
     await this.postModel.deleteMany();
     await this.userModel.deleteMany();
+    await this.commentModel.deleteMany();
     await this.accessToApiModel.deleteMany();
     return;
   }

@@ -9,11 +9,14 @@ import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-d
 import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
+import { Comment } from '../../comments/schemas/comments.schema';
+
 
 @Injectable()
 export class PostsQueryRepository {
   constructor(
     @InjectModel(Post.name) private postModel: Model<Post>,
+    @InjectModel(Comment.name) private commentModel: Model<Comment>,
     private blogsRepository: BlogsRepository,
   ) {}
 
@@ -49,39 +52,27 @@ export class PostsQueryRepository {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException(`Post by ${postId} not found`);
 
-    const postsDB = await this.postModel
-      .find()
-      .sort({ [query.sortBy]: query.sortDirection })
-      .skip(query.calculateSkip())
-      .limit(query.pageSize);
+    const postsByIdByComments = (
+      await this.commentModel
+        .find({ postId })
+        .sort({ [query.sortBy]: query.sortDirection })
+        .skip(query.calculateSkip())
+        .limit(query.pageSize)
+        .lean()
+    ).map(({ _id, postId, updatedAt, __v, ...result }) => ({
+      id: _id.toString(), // Преобразуем ObjectId в строку
+      ...result,
+    }));
 
-    const comments = [
-      {
-        id: 'string',
-        content: 'string',
-        commentatorInfo: {
-          userId: 'string',
-          userLogin: 'string',
-        },
-        createdAt: '2025-05-25T12:55:25.447Z',
-        likesInfo: {
-          likesCount: 0,
-          dislikesCount: 0,
-          myStatus: 'None',
-        },
-      },
-    ];
-
-    // const totalCount = await this.postModel.countDocuments();
-    const totalCount = comments.length;
-
-    const items = [...comments];
+    const countCommentsByPostId = await this.commentModel.countDocuments({
+      postId,
+    });
 
     return PaginatedViewDto.mapToView({
-      items,
-      totalCount,
-      page: query.pageNumber,
-      size: query.pageSize,
+      items: [...postsByIdByComments],
+      totalCount: countCommentsByPostId,
+      page: postsByIdByComments.length > 0 ? query.pageNumber : 0,
+      size: postsByIdByComments.length > 0 ? query.pageSize : 0,
     });
   }
 
@@ -134,4 +125,5 @@ export class PostsQueryRepository {
 
     return PostViewDto.mapToView(post, listReactions, status);
   }
+
 }

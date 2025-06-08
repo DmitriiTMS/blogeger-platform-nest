@@ -21,6 +21,7 @@ export class Comment {
   likesInfo: LikesInfo;
 
   createdAt: Date;
+  updatedAt: Date;
 
   static createInstance( dto: PostDataCommentCreateDto, userLogin: string,): CommentDocument {
 
@@ -39,6 +40,10 @@ export class Comment {
     })
 
     return comment as CommentDocument;
+  }
+
+  updateForContent(contentDto: string) {
+    this.content = contentDto
   }
 }
 

@@ -1,42 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentDocument, CommentModelType } from '../schemas/comments.schema';
+import {
+  Comment,
+  CommentDocument,
+  CommentModelType,
+} from '../schemas/comments.schema';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { Types } from 'mongoose';
+import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 
 @Injectable()
 export class CommentsRepository {
   constructor(
     @InjectModel(Comment.name)
-    private CommentModel: CommentModelType,
+    private commentModel: CommentModelType,
   ) {}
 
-  async create(newCommentByPost: CommentDocument) {
-    await newCommentByPost.save()
+  async save(comment: CommentDocument) {
+    await comment.save();
   }
 
-  async getOneCommentById(id: string) {
-    await this.findCommentById(id);
-    return {
-      id: 'string',
-      content: 'string',
-      commentatorInfo: {
-        userId: 'string',
-        userLogin: 'string',
-      },
-      createdAt: '2025-05-25T14:40:33.940Z',
-      likesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: 'None',
-      },
-    };
+  async getOneCommentById(id: string): Promise<CommentDocument> {
+    const comment = await this.findCommentByIdOrFail(id);
+    return comment
   }
 
-  async findCommentById(id: string) {
-    const comments = ['1', '2', '3'];
-    const findComment = comments.some((item) => item === id);
-    if (!findComment) {
-      throw new NotFoundException(`Comments ${id} not found`);
+   async deleteCommentById(id: string) {
+    await this.commentModel.deleteOne(new Types.ObjectId(id))
+  }
+
+  async findCommentByIdOrFail(id: string) {
+    const comment = await this.commentModel.findById(id);
+    if (!comment) {
+      throw new CustomDomainException({
+        errorsMessages: `Comments by id = ${id} not found`,
+        customCode: DomainExceptionCode.NotFound
+      });
     }
+    return comment
   }
-
+ 
 }

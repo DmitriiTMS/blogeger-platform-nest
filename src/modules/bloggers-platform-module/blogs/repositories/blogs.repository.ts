@@ -7,6 +7,7 @@ import { CustomDomainException } from '../../../../setup/exceptions/custom-domai
 // import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 
+
 @Injectable()
 export class BlogsRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<Blog>) {}
@@ -16,6 +17,16 @@ export class BlogsRepository {
   }
 
   async getByIdOrNotFoundFail(id: string): Promise<BlogDocument> {
+     if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const blog = await this.blogModel.findById(id);
     if (!blog) {
       throw new CustomDomainException({
@@ -27,6 +38,16 @@ export class BlogsRepository {
   }
 
   async delete(id: string) {
+     if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const blog = await this.getOne(id);
     if(!blog) {
       throw new CustomDomainException({

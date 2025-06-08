@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogDocument, BlogModelType } from '../schemas/blog.schema';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { BlogViewDto } from '../dto/views-dto/blog.view-dto';
 import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
-
+import { CustomDomainException } from 'src/setup/exceptions/custom-domain.exception';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -16,6 +20,16 @@ export class BlogsQueryRepository {
   ) {}
 
   async getByIdOrNotFoundFail(id: string): Promise<BlogViewDto> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const blog = await this.BlogModel.findOne({
       _id: id,
     });

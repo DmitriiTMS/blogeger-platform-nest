@@ -21,7 +21,8 @@ import { PostViewDto } from '../../posts/dto/view-dto/post.view-dto';
 import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-dto';
 import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dto';
 import { GetPostsQueryParams } from '../../posts/paginate/get-posts-query-params.input-dto';
-import { JwtAuthGuard } from '../../../user-accounts/users/guards/jwt-auth.guard';
+import { BasicAuthGuard } from '../../../../modules/user-accounts/users/guards/basic-auth.guard';
+
 
 @Controller('blogs')
 
@@ -45,7 +46,7 @@ export class BlogsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createBlog(@Body() body: CreateAndUpdateBlogtDto): Promise<BlogViewDto> {
     const blogId = await this.blogsService.createBlog(body);
@@ -54,7 +55,7 @@ export class BlogsController {
 
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateOneBlog(
     @Param('id') id: string,
@@ -64,8 +65,8 @@ export class BlogsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(BasicAuthGuard)
   async deleteOneBlog(@Param('id') id: string) {
     return await this.blogsService.deleteBlog(id);
   }
@@ -78,7 +79,7 @@ export class BlogsController {
 
   
   @Post(':blogId/posts')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPostByBlogId(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogIdDto): Promise<PostViewDto | null> {
     const postId = await this.blogsService.createPostByBlogId(blogId, body);

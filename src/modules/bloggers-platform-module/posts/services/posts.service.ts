@@ -16,7 +16,7 @@ import {
   CommentDocument,
   CommentModelType,
 } from '../../comments/schemas/comments.schema';
-import { CommentViewDto } from '../../comments/dto/comment-view-dto';
+
 
 @Injectable()
 export class PostsService {
@@ -100,7 +100,7 @@ export class PostsService {
       user.login,
     );
 
-    await this.commentRepository.create(newComment);
+    await this.commentRepository.save(newComment);
     return newComment;
   }
 

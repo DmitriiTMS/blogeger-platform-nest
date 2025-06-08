@@ -10,7 +10,11 @@ import {
   PostSchema,
 } from '../bloggers-platform-module/posts/schemas/post.schema';
 import { User, UserSchema } from '../user-accounts/users/schemas/users.schema';
-import { AccessToApi, AccessToApiSchema } from '../user-accounts/users/schemas/access-to-api.schema';
+import {
+  AccessToApi,
+  AccessToApiSchema,
+} from '../user-accounts/users/schemas/access-to-api.schema';
+import { Comment, CommentSchema } from '../bloggers-platform-module/comments/schemas/comments.schema';
 
 @Module({
   imports: [
@@ -18,6 +22,7 @@ import { AccessToApi, AccessToApiSchema } from '../user-accounts/users/schemas/a
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
       { name: User.name, schema: UserSchema },
+      { name: Comment.name, schema: CommentSchema },
       { name: AccessToApi.name, schema: AccessToApiSchema },
     ]),
   ],

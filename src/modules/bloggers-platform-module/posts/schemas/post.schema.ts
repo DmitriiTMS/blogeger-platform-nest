@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import { HydratedDocument, Model, ObjectId } from 'mongoose';
 import { ExtendedLikesInfo, ExtendedLikesInfoSchema, LikeStatus } from './extendedLikesInfo.schema';
 import { PostCreateDto } from '../dto/post-create.dto';
 

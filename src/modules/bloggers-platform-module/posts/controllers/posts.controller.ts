@@ -24,6 +24,7 @@ import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/users/dec
 import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
 import { CommentDocument } from '../../comments/schemas/comments.schema';
 import { CommentViewDto } from '../../comments/dto/comment-view-dto';
+import { BasicAuthGuard } from 'src/modules/user-accounts/users/guards/basic-auth.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -47,6 +48,7 @@ export class PostsController {
   }
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPost(@Body() body: PostCreateDto): Promise<PostViewDto> {
     const postId = await this.postsService.createPost(body);
@@ -54,12 +56,14 @@ export class PostsController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateOnePost(@Param('id') id: string, @Body() body: PostUpdateDto) {
     return await this.postsService.updatePost(id, body);
   }
 
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOneBlog(@Param('id') id: string) {
     return await this.postsService.deletePost(id);
