@@ -6,20 +6,30 @@ import { CustomDomainException } from 'src/setup/exceptions/custom-domain.except
 import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 import { CommentUpdateDataDto } from '../dto/data-dto/comment-update-data.dto';
 import { IsExistUserComment } from '../dto/data-dto/comment-is-exist-user-data.dto';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 @Injectable()
 export class CommentsService {
   constructor(private commentsRepository: CommentsRepository) {}
 
   async getOne(id: string): Promise<CommentDocument> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const comment = await this.commentsRepository.getOneCommentById(id);
     return comment;
   }
 
   async updateOne(updateCommentDto: CommentUpdateDataDto) {
     const { content, commentId } = updateCommentDto;
-     if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    if (!Types.ObjectId.isValid(commentId)) {
       throw new CustomDomainException({
         errorsMessages: [
           {
@@ -29,7 +39,8 @@ export class CommentsService {
         ],
       });
     }
-    const comment = await this.commentsRepository.findCommentByIdOrFail(commentId);
+    const comment =
+      await this.commentsRepository.findCommentByIdOrFail(commentId);
     const isExistUserComment = await this.isExistUserComment(updateCommentDto);
     if (!isExistUserComment) {
       throw new CustomDomainException({

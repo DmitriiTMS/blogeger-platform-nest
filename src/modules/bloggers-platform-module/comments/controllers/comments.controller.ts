@@ -17,6 +17,9 @@ import { ExtractUserIfExistsFromRequest } from '../../../../modules/user-account
 import { CommentDeleteDataDto } from '../dto/data-dto/comment-delete-data.dto';
 import { CommentUpdateDto } from '../dto/comment-update.dto';
 import { CommentUpdateDataDto } from '../dto/data-dto/comment-update-data.dto';
+import { CommentReactionDto } from '../dto/reaction/comment-reaction.dto';
+import { CommentIdReactionDto } from '../dto/reaction/commentId-reaction.dto';
+import { CommentDataReactionDto } from '../dto/reaction/comment-data-reaction.dto';
 
 @Controller('comments')
 export class CommentsController {
@@ -29,7 +32,6 @@ export class CommentsController {
     return this.mapToViewComment(comment);
   }
 
-  
   @Put(':commentId')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -41,7 +43,7 @@ export class CommentsController {
     const dataUpdateComment: CommentUpdateDataDto = {
       content: body.content,
       commentId,
-      userId: user.userId
+      userId: user.userId,
     };
     await this.commentsService.updateOne(dataUpdateComment);
   }
@@ -58,6 +60,22 @@ export class CommentsController {
       userId: user.userId,
     };
     await this.commentsService.deleteOne(dataDeleteComment);
+  }
+
+  @Put(':commentId/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async addReactionByComment(
+    @Body() body: CommentReactionDto,
+    @Param() param: CommentIdReactionDto,
+    @ExtractUserIfExistsFromRequest() user: { userId: string },
+  ) {
+    const data: CommentDataReactionDto = {
+      likeStatus: body.likeStatus,
+      commentId: param.commentId,
+      userId: user.userId,
+    };
+    console.log(data);
   }
 
   mapToViewComment(commentDB: CommentDocument): CommentViewDto {

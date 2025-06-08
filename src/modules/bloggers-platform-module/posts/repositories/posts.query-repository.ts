@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post } from '../schemas/post.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { PostViewDto } from '../dto/view-dto/post.view-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { GetPostsQueryParams } from '../paginate/get-posts-query-params.input-dto';
@@ -49,6 +49,16 @@ export class PostsQueryRepository {
   }
 
   async getAllCommentsByPostId(postId: string, query: GetPostsQueryParams) {
+    if (!Types.ObjectId.isValid(postId)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'postId',
+          },
+        ],
+      });
+    }
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException(`Post by ${postId} not found`);
 
@@ -80,6 +90,16 @@ export class PostsQueryRepository {
     blogId: string,
     query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
+    if (!Types.ObjectId.isValid(blogId)) {
+          throw new CustomDomainException({
+            errorsMessages: [
+              {
+                message: `Invalid blog ID format`,
+                field: 'blogId',
+              },
+            ],
+          });
+        }
     const blog = await this.blogsRepository.getOne(blogId);
     if (!blog) throw new NotFoundException(`Blog by ${blogId} not found`);
 
@@ -97,9 +117,7 @@ export class PostsQueryRepository {
     // запрос к статусу в бд
     const status = LikeStatus.NONE;
 
-    const items = postsDB.map((post) =>
-      PostViewDto.mapToView(post, listReactions, status),
-    );
+    const items = postsDB.map((post) =>PostViewDto.mapToView(post, listReactions, status));
 
     return PaginatedViewDto.mapToView({
       items,
@@ -110,6 +128,16 @@ export class PostsQueryRepository {
   }
 
   async getOneWithReactions(id: string): Promise<PostViewDto> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const listReactions = [
       { addedAt: '2025-05-25T06:11:54.055Z', userId: 'userId', login: 'login' },
     ];

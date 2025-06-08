@@ -5,6 +5,8 @@ import { Blog, BlogModelType } from '../schemas/blog.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreatePostByBlogIdDto } from '../dto/create-post-by-blogId.dto';
 import { PostsService } from '../../posts/services/posts.service';
+import { Types } from 'mongoose';
+import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 
 @Injectable()
 export class BlogsService {
@@ -39,6 +41,16 @@ export class BlogsService {
     blogId: string,
     postByBlogIdDto: CreatePostByBlogIdDto,
   ): Promise<string> {
+    if (!Types.ObjectId.isValid(blogId)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'blogId',
+          },
+        ],
+      });
+    }
     return await this.postsService.createPost({ ...postByBlogIdDto, blogId });
   }
 }

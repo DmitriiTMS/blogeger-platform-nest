@@ -8,7 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users.repository';
 import { CommentsRepository } from '../../comments/repositories/comments.repository';
 import {
@@ -16,7 +16,6 @@ import {
   CommentDocument,
   CommentModelType,
 } from '../../comments/schemas/comments.schema';
-
 
 @Injectable()
 export class PostsService {
@@ -51,6 +50,16 @@ export class PostsService {
   }
 
   async updatePost(id: string, postDto: PostUpdateDto) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     const post = await this.postsRepository.findPost(id);
     if (!post) {
       throw new NotFoundException(`Post by ${id} not found`);
@@ -59,10 +68,22 @@ export class PostsService {
   }
 
   async deletePost(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'id',
+          },
+        ],
+      });
+    }
     return await this.postsRepository.delete(id);
   }
 
-  async createCommentsByPostId(dataForCreteCommentDto: PostDataCommentCreateDto): Promise<CommentDocument> {
+  async createCommentsByPostId(
+    dataForCreteCommentDto: PostDataCommentCreateDto,
+  ): Promise<CommentDocument> {
     const { content, postId, userId } = dataForCreteCommentDto;
 
     if (!mongoose.Types.ObjectId.isValid(postId)) {
@@ -92,7 +113,8 @@ export class PostsService {
       });
     }
 
-    const newComment = this.CommentModel.createInstance({
+    const newComment = this.CommentModel.createInstance(
+      {
         content,
         postId,
         userId,
@@ -103,6 +125,4 @@ export class PostsService {
     await this.commentRepository.save(newComment);
     return newComment;
   }
-
- 
 }
