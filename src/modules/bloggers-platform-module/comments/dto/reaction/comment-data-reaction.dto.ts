@@ -1,5 +1,7 @@
+import { LikeStatus } from "../../schemas/comment-reaction.schema"
+
 export class CommentDataReactionDto {
-    likeStatus: string
+    status: LikeStatus
     commentId: string
     userId: string
 }

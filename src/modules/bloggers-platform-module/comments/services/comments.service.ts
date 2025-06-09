@@ -7,10 +7,19 @@ import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
 import { CommentUpdateDataDto } from '../dto/data-dto/comment-update-data.dto';
 import { IsExistUserComment } from '../dto/data-dto/comment-is-exist-user-data.dto';
 import mongoose, { Types } from 'mongoose';
+import { CommentDataReactionDto } from '../dto/reaction/comment-data-reaction.dto';
+import { UsersRepository } from 'src/modules/user-accounts/users/repositories/users.repository';
+import { CommentsReactionsRepository } from '../repositories/comments-reactions.repository';
+import { LikeStatus } from '../../posts/schemas/extendedLikesInfo.schema';
 
 @Injectable()
 export class CommentsService {
-  constructor(private commentsRepository: CommentsRepository) {}
+  constructor(
+    private commentsRepository: CommentsRepository,
+    private commentsReactionsRepository: CommentsReactionsRepository,
+     private usersRepository: UsersRepository,
+
+  ) {}
 
   async getOne(id: string): Promise<CommentDocument> {
     if (!Types.ObjectId.isValid(id)) {
@@ -72,6 +81,77 @@ export class CommentsService {
       });
     }
     await this.commentsRepository.deleteCommentById(commentId);
+  }
+
+  async addReaction(dataCommentReactionDto: CommentDataReactionDto) {
+    const {status, commentId, userId} = dataCommentReactionDto;
+
+    const comment = await this.commentsRepository.getCommentById(commentId)
+    if(!comment) {
+      throw new CustomDomainException({
+        errorsMessages: `Comments by id = ${commentId} not found`,
+        customCode: DomainExceptionCode.NotFound
+      });
+    }
+    const user = await this.usersRepository.getOne(userId);
+    if(!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by id = ${userId} not found`,
+        customCode: DomainExceptionCode.NotFound
+      });
+    }
+    const isReactionForCommentIdAndUserId = await this.commentsReactionsRepository.reactionForCommentIdAndUserId(commentId, userId);
+    if(!isReactionForCommentIdAndUserId) {
+      await this.commentsReactionsRepository.saveInCommentReaction(dataCommentReactionDto)
+       const [totalCountLike, totalCountDislike] = await Promise.all([
+        this.commentsReactionsRepository.commentsLikeCount(
+          commentId,
+          LikeStatus.LIKE
+        ),
+        this.commentsReactionsRepository.commentsDislikeCount(
+          commentId,
+          LikeStatus.DISLIKE
+        ),
+      ]);
+      await Promise.all([
+        this.commentsRepository.likeCountUpdate(
+          commentId,
+          totalCountLike
+        ),
+        this.commentsRepository.dislikeCountUpdate(
+          commentId,
+          totalCountDislike
+        ),
+      ]);
+      return
+    }
+
+    if(status !== isReactionForCommentIdAndUserId.status) {
+      await this.commentsReactionsRepository.updateCommentReaction(
+        isReactionForCommentIdAndUserId._id.toString(),
+        status
+      );
+       const [totalCountLike, totalCountDislike] = await Promise.all([
+        this.commentsReactionsRepository.commentsLikeCount(
+          commentId,
+          LikeStatus.LIKE
+        ),
+        this.commentsReactionsRepository.commentsDislikeCount(
+          commentId,
+          LikeStatus.DISLIKE
+        ),
+      ]);
+      await Promise.all([
+        this.commentsRepository.likeCountUpdate(
+          commentId,
+          totalCountLike
+        ),
+        this.commentsRepository.dislikeCountUpdate(
+          commentId,
+          totalCountDislike
+        ),
+      ]);
+    }
   }
 
   async isExistUserComment(commentDto: IsExistUserComment): Promise<boolean> {

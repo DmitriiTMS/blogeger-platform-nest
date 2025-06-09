@@ -15,6 +15,7 @@ import {
   AccessToApiSchema,
 } from '../user-accounts/users/schemas/access-to-api.schema';
 import { Comment, CommentSchema } from '../bloggers-platform-module/comments/schemas/comments.schema';
+import { CommentReaction, CommentReactionSchema } from '../bloggers-platform-module/comments/schemas/comment-reaction.schema';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Comment, CommentSchema } from '../bloggers-platform-module/comments/sch
       { name: User.name, schema: UserSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: AccessToApi.name, schema: AccessToApiSchema },
+      { name: CommentReaction.name, schema: CommentReactionSchema },
     ]),
   ],
   controllers: [TestingController],

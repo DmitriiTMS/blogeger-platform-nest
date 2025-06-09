@@ -28,12 +28,12 @@ export class AuthService {
   ) {}
 
   async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string, refreshToken: string }> {
-    const accessToken = await this.accessJwtService.sign({
+    const accessToken = this.accessJwtService.sign({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
     });
 
-    const refreshToken = await this.refreshJwtService.sign({
+    const refreshToken =  this.refreshJwtService.sign({
       userId: userViewDto.id,
       deviceId: 'deviceId',
     });

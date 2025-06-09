@@ -25,6 +25,8 @@ import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
 import { CommentDocument } from '../../comments/schemas/comments.schema';
 import { CommentViewDto } from '../../comments/dto/comment-view-dto';
 import { BasicAuthGuard } from 'src/modules/user-accounts/users/guards/basic-auth.guard';
+import { AuthorizationCheckGuard } from '../../../../modules/user-accounts/users/guards/authorization-check.guard';
+import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
 
 @Controller('posts')
 export class PostsController {
@@ -34,6 +36,7 @@ export class PostsController {
   ) {}
 
   @Get()
+   @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
   async getAllPosts(
     @Query() query: GetPostsQueryParams,
@@ -83,6 +86,13 @@ export class PostsController {
       userId: user.userId,
     };
     const newComment = await this.postsService.createCommentsByPostId(data);
+
+    //  let userStatus = LikeStatus.NONE; 
+    //     if (user?.userId) {
+    //       const reactionUser = await this.commentsQueryReactionsRepository.reactionForCommentIdAndUserId(id, user.userId);
+    //       userStatus = reactionUser?.status || LikeStatus.NONE;
+    //     }
+
     return this.mapCommentDBToCommentView(newComment)
   }
 

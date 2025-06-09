@@ -7,7 +7,8 @@ import {
 } from '../schemas/comments.schema';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 import { Types } from 'mongoose';
-import { DomainExceptionCode } from 'src/setup/exceptions/filters/constants';
+import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
+import { LikeStatus } from '../schemas/comment-reaction.schema';
 
 @Injectable()
 export class CommentsRepository {
@@ -38,6 +39,32 @@ export class CommentsRepository {
       });
     }
     return comment
+  }
+
+  async getCommentById(commentId: string) {
+    return await this.commentModel.findById(commentId);
+  }
+
+  async likeCountUpdate(commentId: string, count: number) {
+    return await this.commentModel.updateOne(
+      { _id: commentId },
+      {
+        $set: {
+          "likesInfo.likesCount": count,
+        },
+      }
+    );
+  }
+
+  async dislikeCountUpdate(commentId: string, count: number) {
+    return await this.commentModel.updateOne(
+      { _id: commentId },
+      {
+        $set: {
+          "likesInfo.dislikesCount": count,
+        },
+      }
+    );
   }
  
 }

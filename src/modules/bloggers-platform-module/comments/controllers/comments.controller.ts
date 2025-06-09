@@ -20,16 +20,33 @@ import { CommentUpdateDataDto } from '../dto/data-dto/comment-update-data.dto';
 import { CommentReactionDto } from '../dto/reaction/comment-reaction.dto';
 import { CommentIdReactionDto } from '../dto/reaction/commentId-reaction.dto';
 import { CommentDataReactionDto } from '../dto/reaction/comment-data-reaction.dto';
+import { AuthorizationCheckGuard } from '../../../user-accounts/users/guards/authorization-check.guard';
+import { LikeStatus } from '../schemas/comment-reaction.schema';
+import { CommentsQueryReactionsRepository } from '../dto/reaction/comment-query-reaction-repository.dto';
+
 
 @Controller('comments')
 export class CommentsController {
-  constructor(private commentsService: CommentsService) {}
+  constructor(
+    private commentsService: CommentsService,
+    private commentsQueryReactionsRepository: CommentsQueryReactionsRepository
+  ) {}
 
   @Get(':id')
+  @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
-  async getOneComment(@Param('id') id: string): Promise<CommentViewDto> {
+  async getOneComment(
+    @Param('id') id: string,
+    @ExtractUserIfExistsFromRequest() user: { userId: string }
+  ): Promise<CommentViewDto> {
     const comment = await this.commentsService.getOne(id);
-    return this.mapToViewComment(comment);
+    let userStatus = LikeStatus.NONE; 
+
+    if (user?.userId) {
+      const reactionUser = await this.commentsQueryReactionsRepository.reactionForCommentIdAndUserId(id, user.userId);
+      userStatus = reactionUser?.status || LikeStatus.NONE;
+    }
+    return this.mapToViewComment(comment, userStatus);
   }
 
   @Put(':commentId')
@@ -71,14 +88,14 @@ export class CommentsController {
     @ExtractUserIfExistsFromRequest() user: { userId: string },
   ) {
     const data: CommentDataReactionDto = {
-      likeStatus: body.likeStatus,
+      status: body.likeStatus,
       commentId: param.commentId,
       userId: user.userId,
     };
-    console.log(data);
+    await this.commentsService.addReaction(data)
   }
 
-  mapToViewComment(commentDB: CommentDocument): CommentViewDto {
+  mapToViewComment(commentDB: CommentDocument, status: LikeStatus): CommentViewDto {
     return {
       id: commentDB._id.toString(),
       content: commentDB.content,
@@ -88,9 +105,9 @@ export class CommentsController {
       },
       createdAt: commentDB.createdAt,
       likesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: commentDB.likesInfo.myStatus,
+        likesCount: commentDB.likesInfo.likesCount,
+        dislikesCount: commentDB.likesInfo.dislikesCount,
+        myStatus: status,
       },
     };
   }
