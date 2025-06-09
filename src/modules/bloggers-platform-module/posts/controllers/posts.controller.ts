@@ -24,9 +24,12 @@ import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/users/dec
 import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
 import { CommentDocument } from '../../comments/schemas/comments.schema';
 import { CommentViewDto } from '../../comments/dto/comment-view-dto';
-import { BasicAuthGuard } from 'src/modules/user-accounts/users/guards/basic-auth.guard';
+import { BasicAuthGuard } from '../../../../modules/user-accounts/users/guards/basic-auth.guard';
 import { AuthorizationCheckGuard } from '../../../../modules/user-accounts/users/guards/authorization-check.guard';
 import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
+import { PostReactionBodyDto } from '../dto/reaction/post-reaction-body.dto';
+import { PostReactionParamDto } from '../dto/reaction/post-reaction-param.dto';
+import { PostDataReactionDto } from '../dto/reaction/post-reaction-data.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -72,6 +75,25 @@ export class PostsController {
     return await this.postsService.deletePost(id);
   }
 
+  @Put(':postId/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async addReactionPost(
+    @Body() body: PostReactionBodyDto,
+    @Param() param: PostReactionParamDto,
+    @ExtractUserIfExistsFromRequest() user: { userId: string },
+  ) {
+    const data: PostDataReactionDto = {
+      status: body.likeStatus,
+      postId: param.postId,
+      userId: user.userId
+    }
+
+    console.log(data);
+    
+    
+  }
+
   @Post(':postId/comments')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -106,8 +128,7 @@ export class PostsController {
   }
 
    mapCommentDBToCommentView(
-    comment: CommentDocument,
-    // ,status: ReactionType
+    comment: CommentDocument
   ): CommentViewDto {
     return {
       id: comment._id.toString(),

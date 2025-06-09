@@ -49,61 +49,6 @@ export class PostsQueryRepository {
     });
   }
 
-  async getAllCommentsByPostId(
-    postId: string,
-    query: GetPostsQueryParams,
-    userId?: string,
-  ) {
-    if (!Types.ObjectId.isValid(postId)) {
-      throw new CustomDomainException({
-        errorsMessages: [
-          {
-            message: `Invalid blog ID format`,
-            field: 'postId',
-          },
-        ],
-      });
-    }
-    const post = await this.postModel.findById(postId);
-    if (!post) throw new NotFoundException(`Post by ${postId} not found`);
-
-    const postIdsFromCommentsCollection = await this.commentModel.find({postId}).lean()
-    const commentIds = postIdsFromCommentsCollection.map((item) => item._id.toString() )
-    const allCommentsReactionWithUserIdAndCommentIds = await this.commentReactionModel
-      .find({userId, commentId: {$in: commentIds}}).lean()
-    const reactionDictionary = allCommentsReactionWithUserIdAndCommentIds.reduce((acc, reaction) => {
-      return {
-        ...acc,
-        [reaction.commentId]: reaction.status,
-      };
-    }, {});
-    
-    const postsByIdByComments = (
-      await this.commentModel
-        .find({ postId })
-        .sort({ [query.sortBy]: query.sortDirection })
-        .skip(query.calculateSkip())
-        .limit(query.pageSize)
-        .lean()
-    ).map(({ _id, postId, updatedAt, __v, ...result }) => {
-   
-      result.likesInfo.myStatus = reactionDictionary[_id.toString()] ?? LikeStatus.NONE
-
-      return {
-        id: _id.toString(),
-        ...result,
-      };
-    });
-
-    const countCommentsByPostId = await this.commentModel.countDocuments({postId});
-
-    return PaginatedViewDto.mapToView({
-      items: [...postsByIdByComments],
-      totalCount: countCommentsByPostId,
-      page: postsByIdByComments.length > 0 ? query.pageNumber : 0,
-      size: postsByIdByComments.length > 0 ? query.pageSize : 0,
-    });
-  }
 
   async getAllWithReactions(
     blogId: string,
@@ -174,4 +119,61 @@ export class PostsQueryRepository {
 
     return PostViewDto.mapToView(post, listReactions, status);
   }
+
+    async getAllCommentsByPostId(
+    postId: string,
+    query: GetPostsQueryParams,
+    userId?: string,
+  ) {
+    if (!Types.ObjectId.isValid(postId)) {
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'postId',
+          },
+        ],
+      });
+    }
+    const post = await this.postModel.findById(postId);
+    if (!post) throw new NotFoundException(`Post by ${postId} not found`);
+
+    const postIdsFromCommentsCollection = await this.commentModel.find({postId}).lean()
+    const commentIds = postIdsFromCommentsCollection.map((item) => item._id.toString() )
+    const allCommentsReactionWithUserIdAndCommentIds = await this.commentReactionModel
+      .find({userId, commentId: {$in: commentIds}}).lean()
+    const reactionDictionary = allCommentsReactionWithUserIdAndCommentIds.reduce((acc, reaction) => {
+      return {
+        ...acc,
+        [reaction.commentId]: reaction.status,
+      };
+    }, {});
+    
+    const postsByIdByComments = (
+      await this.commentModel
+        .find({ postId })
+        .sort({ [query.sortBy]: query.sortDirection })
+        .skip(query.calculateSkip())
+        .limit(query.pageSize)
+        .lean()
+    ).map(({ _id, postId, updatedAt, __v, ...result }) => {
+   
+      result.likesInfo.myStatus = reactionDictionary[_id.toString()] ?? LikeStatus.NONE
+
+      return {
+        id: _id.toString(),
+        ...result,
+      };
+    });
+
+    const countCommentsByPostId = await this.commentModel.countDocuments({postId});
+
+    return PaginatedViewDto.mapToView({
+      items: [...postsByIdByComments],
+      totalCount: countCommentsByPostId,
+      page: postsByIdByComments.length > 0 ? query.pageNumber : 0,
+      size: postsByIdByComments.length > 0 ? query.pageSize : 0,
+    });
+  }
+
 }
