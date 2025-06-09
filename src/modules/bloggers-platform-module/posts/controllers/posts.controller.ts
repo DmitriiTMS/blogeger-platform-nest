@@ -36,12 +36,12 @@ export class PostsController {
   ) {}
 
   @Get()
-   @UseGuards(AuthorizationCheckGuard)
+  // @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
   async getAllPosts(
     @Query() query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return await this.postsQueryRepository.getAll(query);
+    return await this.postsQueryRepository.getAllPost(query);
   }
 
   @Get(':id')
@@ -86,25 +86,22 @@ export class PostsController {
       userId: user.userId,
     };
     const newComment = await this.postsService.createCommentsByPostId(data);
-
-    //  let userStatus = LikeStatus.NONE; 
-    //     if (user?.userId) {
-    //       const reactionUser = await this.commentsQueryReactionsRepository.reactionForCommentIdAndUserId(id, user.userId);
-    //       userStatus = reactionUser?.status || LikeStatus.NONE;
-    //     }
-
     return this.mapCommentDBToCommentView(newComment)
   }
 
   @Get(':postId/comments')
+  @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
   async getAllCommentsByPostId(
     @Param('postId') postId: string,
     @Query() query: GetPostsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: { userId: string }
   ) {
+
     return await this.postsQueryRepository.getAllCommentsByPostId(
       postId,
       query,
+      user?.userId
     );
   }
 

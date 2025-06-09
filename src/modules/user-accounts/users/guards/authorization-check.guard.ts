@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SETTINGS } from '../../../../core/settings';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthorizationCheckGuard implements CanActivate {
@@ -30,20 +30,22 @@ export class AuthorizationCheckGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token type');
     }
 
-    const payload = this.accessJwtService.verify(token, {
-      secret: SETTINGS.ACCESS_TOKEN_SECRET,
-    });
-
-    if (!payload) {
-      throw new UnauthorizedException('Invalid or expired token');
+    try {
+      const payload = this.accessJwtService.verify(token, {
+        secret: SETTINGS.ACCESS_TOKEN_SECRET,
+      });
+      request.user = {
+        userId: payload.userId,
+        userLogin: payload.userLogin,
+      };
+      return true;
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        console.log('Token expired');
+        return true;
+      }
+      console.log('Invalid token');
+      return true;
     }
-
-    // Добавляем информацию о пользователе в request
-    request.user = {
-      userId: payload.userId,
-      userLogin: payload.userLogin,
-    };
-
-    return true;
   }
 }

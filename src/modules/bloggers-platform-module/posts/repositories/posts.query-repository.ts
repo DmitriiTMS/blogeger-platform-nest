@@ -10,17 +10,18 @@ import { LikeStatus } from '../schemas/extendedLikesInfo.schema';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 import { Comment } from '../../comments/schemas/comments.schema';
-
+import { CommentReaction, CommentReactionModelType } from '../../comments/schemas/comment-reaction.schema';
 
 @Injectable()
 export class PostsQueryRepository {
   constructor(
     @InjectModel(Post.name) private postModel: Model<Post>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
+     @InjectModel(CommentReaction.name) private commentReactionModel: CommentReactionModelType,
     private blogsRepository: BlogsRepository,
   ) {}
 
-  async getAll(
+  async getAllPost(
     query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const listReactions = [
@@ -48,7 +49,11 @@ export class PostsQueryRepository {
     });
   }
 
-  async getAllCommentsByPostId(postId: string, query: GetPostsQueryParams) {
+  async getAllCommentsByPostId(
+    postId: string,
+    query: GetPostsQueryParams,
+    userId?: string,
+  ) {
     if (!Types.ObjectId.isValid(postId)) {
       throw new CustomDomainException({
         errorsMessages: [
@@ -62,6 +67,17 @@ export class PostsQueryRepository {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException(`Post by ${postId} not found`);
 
+    const postIdsFromCommentsCollection = await this.commentModel.find({postId}).lean()
+    const commentIds = postIdsFromCommentsCollection.map((item) => item._id.toString() )
+    const allCommentsReactionWithUserIdAndCommentIds = await this.commentReactionModel
+      .find({userId, commentId: {$in: commentIds}}).lean()
+    const reactionDictionary = allCommentsReactionWithUserIdAndCommentIds.reduce((acc, reaction) => {
+      return {
+        ...acc,
+        [reaction.commentId]: reaction.status,
+      };
+    }, {});
+    
     const postsByIdByComments = (
       await this.commentModel
         .find({ postId })
@@ -69,14 +85,17 @@ export class PostsQueryRepository {
         .skip(query.calculateSkip())
         .limit(query.pageSize)
         .lean()
-    ).map(({ _id, postId, updatedAt, __v, ...result }) => ({
-      id: _id.toString(), // Преобразуем ObjectId в строку
-      ...result,
-    }));
+    ).map(({ _id, postId, updatedAt, __v, ...result }) => {
+   
+      result.likesInfo.myStatus = reactionDictionary[_id.toString()] ?? LikeStatus.NONE
 
-    const countCommentsByPostId = await this.commentModel.countDocuments({
-      postId,
+      return {
+        id: _id.toString(),
+        ...result,
+      };
     });
+
+    const countCommentsByPostId = await this.commentModel.countDocuments({postId});
 
     return PaginatedViewDto.mapToView({
       items: [...postsByIdByComments],
@@ -91,15 +110,15 @@ export class PostsQueryRepository {
     query: GetPostsQueryParams,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     if (!Types.ObjectId.isValid(blogId)) {
-          throw new CustomDomainException({
-            errorsMessages: [
-              {
-                message: `Invalid blog ID format`,
-                field: 'blogId',
-              },
-            ],
-          });
-        }
+      throw new CustomDomainException({
+        errorsMessages: [
+          {
+            message: `Invalid blog ID format`,
+            field: 'blogId',
+          },
+        ],
+      });
+    }
     const blog = await this.blogsRepository.getOne(blogId);
     if (!blog) throw new NotFoundException(`Blog by ${blogId} not found`);
 
@@ -117,7 +136,9 @@ export class PostsQueryRepository {
     // запрос к статусу в бд
     const status = LikeStatus.NONE;
 
-    const items = postsDB.map((post) =>PostViewDto.mapToView(post, listReactions, status));
+    const items = postsDB.map((post) =>
+      PostViewDto.mapToView(post, listReactions, status),
+    );
 
     return PaginatedViewDto.mapToView({
       items,
@@ -153,5 +174,4 @@ export class PostsQueryRepository {
 
     return PostViewDto.mapToView(post, listReactions, status);
   }
-
 }
