@@ -23,6 +23,7 @@ import { CommentsReactionsRepository } from './comments/repositories/comments-re
 import { SETTINGS } from '../../core/settings';
 import { JwtService } from '@nestjs/jwt';
 import { CommentsQueryReactionsRepository } from './comments/dto/reaction/comment-query-reaction-repository.dto';
+import { PostReaction, PostReactionSchema } from './posts/schemas/post-reaction.schema';
 
 const services = [BlogsService, PostsService, CommentsService];
 
@@ -33,6 +34,7 @@ const services = [BlogsService, PostsService, CommentsService];
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
       { name: CommentReaction.name, schema: CommentReactionSchema },
+      { name: PostReaction.name, schema: PostReactionSchema },
     ]),
     UserAccountsModule,
   ],

@@ -20,9 +20,10 @@ export class AuthorizationCheckGuard implements CanActivate {
     const authHeader = request.headers['authorization'];
 
     // Если токена нет, пропускаем (например, для публичных эндпоинтов)
-    if (!authHeader) {
+    if (!authHeader || authHeader?.startsWith('Basic ')) {
       return true;
     }
+
 
     const [authType, token] = authHeader.split(' ');
 
@@ -47,5 +48,6 @@ export class AuthorizationCheckGuard implements CanActivate {
       console.log('Invalid token');
       return true;
     }
+   
   }
 }

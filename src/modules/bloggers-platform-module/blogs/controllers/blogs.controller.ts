@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -22,10 +23,12 @@ import { PaginatedViewDto } from '../../../../core/paginate/base.paginate.view-d
 import { GetBlogsQueryParams } from '../paginate/get-blogs-query-params.input-dto';
 import { GetPostsQueryParams } from '../../posts/paginate/get-posts-query-params.input-dto';
 import { BasicAuthGuard } from '../../../../modules/user-accounts/users/guards/basic-auth.guard';
+import { AuthorizationCheckGuard } from '../../../../modules/user-accounts/users/guards/authorization-check.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../../modules/user-accounts/users/decorators/extract-user-if-exists-from-request.decorator';
+
 
 
 @Controller('blogs')
-
 export class BlogsController {
   constructor(
     private blogsService: BlogsService,
@@ -72,18 +75,26 @@ export class BlogsController {
   }
 
   @Get(':blogId/posts')
+  @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
-  async getAllPostsByBlogId(@Param('blogId') blogId: string, @Query() query: GetPostsQueryParams):Promise<PaginatedViewDto<PostViewDto[]>> {
-    return await this.postsQueryRepository.getAllWithReactions(blogId, query)
+  async getAllPostsByBlogId(
+    @Param('blogId') blogId: string,
+    @Query() query: GetPostsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: { userId: string }
+  ):Promise<PaginatedViewDto<PostViewDto[]>> {
+    return await this.postsQueryRepository.getAllWithReactions(blogId, query, user?.userId)
   }
 
   
   @Post(':blogId/posts')
   @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createPostByBlogId(@Param('blogId') blogId: string, @Body() body: CreatePostByBlogIdDto): Promise<PostViewDto | null> {
+  async createPostByBlogId(
+    @Param('blogId') blogId: string, 
+    @Body() body: CreatePostByBlogIdDto,
+  ): Promise<PostViewDto | null> {
     const postId = await this.blogsService.createPostByBlogId(blogId, body);
-    return await this.postsQueryRepository.getOneWithReactions(postId);
+    return await this.postsQueryRepository.getOneNoReactions(postId);
   }
 
 }

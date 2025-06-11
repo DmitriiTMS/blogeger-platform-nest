@@ -39,18 +39,23 @@ export class PostsController {
   ) {}
 
   @Get()
-  // @UseGuards(AuthorizationCheckGuard)
+  @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
   async getAllPosts(
     @Query() query: GetPostsQueryParams,
+    @ExtractUserIfExistsFromRequest() user: { userId: string }
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return await this.postsQueryRepository.getAllPost(query);
+    return await this.postsQueryRepository.getAllPost(query, user?.userId);
   }
 
   @Get(':id')
+  @UseGuards(AuthorizationCheckGuard)
   @HttpCode(HttpStatus.OK)
-  async getOnePost(@Param('id') id: string): Promise<PostViewDto | null> {
-    return await this.postsQueryRepository.getOneWithReactions(id);
+  async getOnePost(
+    @Param('id') id: string,
+    @ExtractUserIfExistsFromRequest() user: { userId: string }
+  ): Promise<PostViewDto | null> {
+    return await this.postsQueryRepository.getOneWithReactions(id, user?.userId);
   }
 
   @Post()
@@ -58,7 +63,7 @@ export class PostsController {
   @HttpCode(HttpStatus.CREATED)
   async createPost(@Body() body: PostCreateDto): Promise<PostViewDto> {
     const postId = await this.postsService.createPost(body);
-    return await this.postsQueryRepository.getOneWithReactions(postId);
+    return await this.postsQueryRepository.getOneNoReactions(postId);
   }
 
   @Put(':id')
@@ -83,15 +88,13 @@ export class PostsController {
     @Param() param: PostReactionParamDto,
     @ExtractUserIfExistsFromRequest() user: { userId: string },
   ) {
-    const data: PostDataReactionDto = {
+    const postDataReactionDto: PostDataReactionDto = {
       status: body.likeStatus,
       postId: param.postId,
       userId: user.userId
     }
 
-    console.log(data);
-    
-    
+    await this.postsService.addReaction(postDataReactionDto)
   }
 
   @Post(':postId/comments')

@@ -36,6 +36,8 @@ export class Post {
     post.extendedLikesInfo = {
         likesCount: 0,
         dislikesCount: 0,
+        myStatus: LikeStatus.NONE,
+        newestLikes: []
     };
 
     return post as PostDocument;

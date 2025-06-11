@@ -16,6 +16,8 @@ import {
   CommentDocument,
   CommentModelType,
 } from '../../comments/schemas/comments.schema';
+import { PostDataReactionDto } from '../dto/reaction/post-reaction-data.dto';
+import { LikeStatus } from '../schemas/post-reaction.schema';
 
 @Injectable()
 export class PostsService {
@@ -124,5 +126,60 @@ export class PostsService {
 
     await this.commentRepository.save(newComment);
     return newComment;
+  }
+
+  async addReaction(postDataReactionDto: PostDataReactionDto) {
+    const {status, userId, postId} = postDataReactionDto;
+
+    const post = await this.postsRepository.findPost(postId)
+    if(!post) {
+      throw new CustomDomainException({
+        errorsMessages: `Posts by id = ${postId} not found`,
+        customCode: DomainExceptionCode.NotFound
+      });
+    }
+
+    const user = await this.usersRepository.getOne(userId);
+    if(!user) {
+      throw new CustomDomainException({
+        errorsMessages: `User by id = ${userId} not found`,
+        customCode: DomainExceptionCode.NotFound
+      });
+    }
+
+    const isReactionForPostIdAndUserId = await this.postsRepository.reactionForPostIdAndUserId(postId, userId);
+     if(!isReactionForPostIdAndUserId) {
+      await this.postsRepository.saveInPostReaction(postDataReactionDto)
+
+      const [totalCountLike, totalCountDislike] = await Promise.all([
+        this.postsRepository.postsLikeCount(postId, LikeStatus.LIKE),
+        this.postsRepository.postsDislikeCount(postId, LikeStatus.DISLIKE),
+      ]);
+
+      await Promise.all([
+        this.postsRepository.likeCountUpdate(postId, totalCountLike),
+        this.postsRepository.dislikeCountUpdate(postId, totalCountDislike),
+      ]);
+
+      return
+    }
+
+     if(status !== isReactionForPostIdAndUserId.status) {
+      await this.postsRepository.updatePostReaction(isReactionForPostIdAndUserId._id.toString(), status);
+        const [totalCountLike, totalCountDislike] = await Promise.all([
+        this.postsRepository.postsLikeCount(postId, LikeStatus.LIKE),
+        this.postsRepository.postsDislikeCount(postId, LikeStatus.DISLIKE),
+      ]);
+
+      await Promise.all([
+        this.postsRepository.likeCountUpdate(postId, totalCountLike),
+        this.postsRepository.dislikeCountUpdate(postId, totalCountDislike),
+      ]);
+
+      return
+    }
+
+
+   
   }
 }

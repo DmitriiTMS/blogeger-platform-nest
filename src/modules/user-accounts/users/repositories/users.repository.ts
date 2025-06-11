@@ -86,4 +86,9 @@ export class UsersRepository {
       )
       .lean<UserDocument>();
   }
+
+  async findUsersByUserIds( userIds: string[]) {
+    return await this.userModel.find({ _id: { $in:  userIds} }).select('login')
+  }
+
 }

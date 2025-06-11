@@ -16,6 +16,7 @@ import {
 } from '../user-accounts/users/schemas/access-to-api.schema';
 import { Comment, CommentSchema } from '../bloggers-platform-module/comments/schemas/comments.schema';
 import { CommentReaction, CommentReactionSchema } from '../bloggers-platform-module/comments/schemas/comment-reaction.schema';
+import { PostReaction, PostReactionSchema } from '../bloggers-platform-module/posts/schemas/post-reaction.schema';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CommentReaction, CommentReactionSchema } from '../bloggers-platform-mod
       { name: Comment.name, schema: CommentSchema },
       { name: AccessToApi.name, schema: AccessToApiSchema },
       { name: CommentReaction.name, schema: CommentReactionSchema },
+      { name: PostReaction.name, schema: PostReactionSchema },
     ]),
   ],
   controllers: [TestingController],
