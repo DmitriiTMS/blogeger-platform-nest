@@ -117,17 +117,29 @@ export class PostsRepository {
     });
   }
 
-  async findAllLikeByPostIds(
-    status: LikeStatus.LIKE,
-    postIds: string[],
-  ): Promise<LikePostResponse[]> {
-    return (await this.postReactionModel
-      .find({ status, postId: { $in: postIds } })
-      .sort({ _id: -1 })
-      .limit(3)
-      .lean()
-      .exec()) as unknown as LikePostResponse[];
-  }
+ async findAllLikeByPostIds(
+  status: LikeStatus.LIKE,
+  postIds: string[],
+): Promise<LikePostResponse[]> {
+  return (await this.postReactionModel
+    .find({ status, postId: { $in: postIds } })
+    .sort({ createdAt: -1 })
+    .select('postId userId createdAt')
+    .lean()
+    .exec()) as unknown as LikePostResponse[];
+}
+
+  // async findAllLikeByPostIds(
+  //   status: LikeStatus.LIKE,
+  //   postIds: string[],
+  // ): Promise<LikePostResponse[]> {
+  //   return (await this.postReactionModel
+  //     .find({ status, postId: { $in: postIds } })
+  //     .sort({ createdAt: -1 })
+  //     .limit(3)
+  //     .lean()
+  //     .exec()) as unknown as LikePostResponse[];
+  // }
 
   async findAllLikesByPostId(
     status: LikeStatus.LIKE,
@@ -135,7 +147,7 @@ export class PostsRepository {
   ): Promise<LikePostResponse[]> {
     return (await this.postReactionModel
       .find({ status, postId })
-      .sort({ _id: -1 })
+      .sort({ createdAt: -1 })
       .limit(3)
       .lean()
       .exec()) as unknown as LikePostResponse[];

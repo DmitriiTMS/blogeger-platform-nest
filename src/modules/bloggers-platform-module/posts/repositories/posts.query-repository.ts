@@ -29,6 +29,88 @@ export class PostsQueryRepository {
     private usersRepository: UsersRepository,
   ) {}
 
+  // async getAllPost(
+  //   query: GetPostsQueryParams,
+  //   userId: string,
+  // ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  //   const postsDB = await this.postModel
+  //     .find()
+  //     .sort({ [query.sortBy]: query.sortDirection })
+  //     .skip(query.calculateSkip())
+  //     .limit(query.pageSize);
+
+  //   const postIds = postsDB.map((p) => p._id.toString());
+
+  //   //Получение любых реакций
+  //   const postsReactions =
+  //     await this.postRepository.findManyReactionByUserIdAndPostId(
+  //       userId,
+  //       postIds,
+  //     );
+  //   const reactionDictionary = postsReactions.reduce((acc, reaction) => {
+  //     return {
+  //       ...acc,
+  //       [reaction.postId]: reaction.status,
+  //     };
+  //   }, {});
+
+  //   // Получение последних 3 лайков для каждого поста (уже отсортированных по дате)
+  //   const postsLikeReaction = await this.postRepository.findAllLikeByPostIds(
+  //     LikeStatus.LIKE,
+  //     postIds,
+  //   );
+
+  //   // Получение login user
+  //   const uniqueUserIds = [
+  //     ...new Set(
+  //       postsLikeReaction.map((item) => item.userId?.toString() || ''),
+  //     ),
+  //   ];
+  //   const loginsUsers =
+  //     await this.usersRepository.findUsersByUserIds(uniqueUserIds);
+  //   const userIdToLoginMap = loginsUsers.reduce((acc, user) => {
+  //     acc[user.id] = user.login;
+  //     return acc;
+  //   }, {});
+
+  //   const reactionDictionaryLIKE = postsLikeReaction.reduce((acc, reaction) => {
+  //     const postId = reaction.postId;
+  //     const userId = reaction.userId?.toString();
+
+  //     if (!userId) return acc; // пропускаем если нет userId
+
+  //     if (!acc[postId]) {
+  //       acc[postId] = [];
+  //     }
+
+  //     acc[postId].push({
+  //       userId: userId,
+  //       login: userIdToLoginMap[userId] || 'deleted', // или 'unknown' если пользователь не найден
+  //       addedAt: reaction.createdAt.toISOString,
+  //     });
+
+  //     return acc;
+  //   }, {});
+
+  //   const items = postsDB.map((post) => {
+  //     post.extendedLikesInfo.myStatus = reactionDictionary[post._id.toString()] ?? LikeStatus.NONE;
+  //     post.extendedLikesInfo.newestLikes = reactionDictionaryLIKE[post._id.toString()] ?? [];
+  //     return PostViewDto.mapToView(
+  //       post,
+  //       post.extendedLikesInfo.newestLikes,
+  //       post.extendedLikesInfo.myStatus,
+  //     );
+  //   });
+
+  //   const totalCount = await this.postModel.countDocuments();
+  //   return PaginatedViewDto.mapToView({
+  //     items,
+  //     totalCount,
+  //     page: query.pageNumber,
+  //     size: query.pageSize,
+  //   });
+  // }
+
   async getAllPost(
     query: GetPostsQueryParams,
     userId: string,
@@ -41,7 +123,7 @@ export class PostsQueryRepository {
 
     const postIds = postsDB.map((p) => p._id.toString());
 
-    //Получение любых реакций
+    // Получаем реакции текущего пользователя
     const postsReactions =
       await this.postRepository.findManyReactionByUserIdAndPostId(
         userId,
@@ -54,50 +136,46 @@ export class PostsQueryRepository {
       };
     }, {});
 
+    // Получаем последние 3 лайка для каждого поста
     const postsLikeReaction = await this.postRepository.findAllLikeByPostIds(
       LikeStatus.LIKE,
       postIds,
     );
 
-    // Получение login user
-    const uniqueUserIds = [
-      ...new Set(
-        postsLikeReaction.map((item) => item.userId?.toString() || ''),
-      ),
+    // Группируем лайки по postId
+    const likesByPostId = postsLikeReaction.reduce((acc, reaction) => {
+      if (!acc[reaction.postId]) {
+        acc[reaction.postId] = [];
+      }
+      acc[reaction.postId].push(reaction);
+      return acc;
+    }, {});
+
+    // Получаем логины пользователей
+    const userIds = [
+      ...new Set(postsLikeReaction.map((r) => r.userId!.toString())),
     ];
-    const loginsUsers =
-      await this.usersRepository.findUsersByUserIds(uniqueUserIds);
-    const userIdToLoginMap = loginsUsers.reduce((acc, user) => {
+    const users = await this.usersRepository.findUsersByUserIds(userIds);
+    const userLoginMap = users.reduce((acc, user) => {
       acc[user.id] = user.login;
       return acc;
     }, {});
 
-    const reactionDictionaryLIKE = postsLikeReaction.reduce((acc, reaction) => {
-      const postId = reaction.postId;
-      const userId = reaction.userId?.toString();
-
-      if (!userId) return acc; // пропускаем если нет userId
-
-      if (!acc[postId]) {
-        acc[postId] = [];
-      }
-
-      acc[postId].push({
-        userId: userId,
-        login: userIdToLoginMap[userId] || 'deleted', // или 'unknown' если пользователь не найден
-        addedAt: reaction.createdAt.toISOString,
-      });
-
-      return acc;
-    }, {});
-
+    // Формируем items
     const items = postsDB.map((post) => {
-      post.extendedLikesInfo.myStatus = reactionDictionary[post._id.toString()] ?? LikeStatus.NONE;
-      post.extendedLikesInfo.newestLikes = reactionDictionaryLIKE[post._id.toString()] ?? [];
+      const postId = post._id.toString();
+      const newestLikes = (likesByPostId[postId] || [])
+        .slice(0, 3) // Берем только 3 последних
+        .map((like) => ({
+          addedAt: like.createdAt.toISOString(),
+          userId: like.userId.toString(),
+          login: userLoginMap[like.userId.toString()] || 'deleted',
+        }));
+
       return PostViewDto.mapToView(
         post,
-        post.extendedLikesInfo.newestLikes,
-        post.extendedLikesInfo.myStatus,
+        newestLikes,
+        reactionDictionary[postId] ?? LikeStatus.NONE,
       );
     });
 
@@ -109,6 +187,103 @@ export class PostsQueryRepository {
       size: query.pageSize,
     });
   }
+
+  // async getAllWithReactions(
+  //   blogId: string,
+  //   query: GetPostsQueryParams,
+  //   userId: string,
+  // ): Promise<PaginatedViewDto<PostViewDto[]>> {
+  //   if (!Types.ObjectId.isValid(blogId)) {
+  //     throw new CustomDomainException({
+  //       errorsMessages: [
+  //         {
+  //           message: `Invalid blog ID format`,
+  //           field: 'blogId',
+  //         },
+  //       ],
+  //     });
+  //   }
+  //   const blog = await this.blogsRepository.getOne(blogId);
+  //   if (!blog) throw new NotFoundException(`Blog by ${blogId} not found`);
+
+  //   const postsAllWithBlogId = await this.postModel
+  //     .find({ blogId })
+  //     .sort({ [query.sortBy]: query.sortDirection })
+  //     .skip(query.calculateSkip())
+  //     .limit(query.pageSize);
+
+  //   const postIds = postsAllWithBlogId.map((p) => p._id.toString());
+
+  //   //Получение любых реакций
+  //   const postsReactions =
+  //     await this.postRepository.findManyReactionByUserIdAndPostId(
+  //       userId,
+  //       postIds,
+  //     );
+  //   const reactionDictionary = postsReactions.reduce((acc, reaction) => {
+  //     return {
+  //       ...acc,
+  //       [reaction.postId]: reaction.status,
+  //     };
+  //   }, {});
+
+  //   const postsLikeReaction = await this.postRepository.findAllLikeByPostIds(
+  //     LikeStatus.LIKE,
+  //     postIds,
+  //   );
+
+  //   // Получение login user
+  //   const uniqueUserIds = [
+  //     ...new Set(
+  //       postsLikeReaction.map((item) => item.userId?.toString() || ''),
+  //     ),
+  //   ];
+  //   const loginsUsers =
+  //     await this.usersRepository.findUsersByUserIds(uniqueUserIds);
+  //   const userIdToLoginMap = loginsUsers.reduce((acc, user) => {
+  //     acc[user.id] = user.login;
+  //     return acc;
+  //   }, {});
+  //   const reactionDictionaryLIKE = postsLikeReaction.reduce((acc, reaction) => {
+  //     const postId = reaction.postId;
+  //     const userId = reaction.userId?.toString();
+
+  //     if (!userId) return acc; // пропускаем если нет userId
+
+  //     if (!acc[postId]) {
+  //       acc[postId] = [];
+  //     }
+
+  //     acc[postId].push({
+  //       userId: userId,
+  //       login: userIdToLoginMap[userId] || 'deleted', // или 'unknown' если пользователь не найден
+  //       addedAt: reaction.createdAt.toISOString,
+  //     });
+
+  //     return acc;
+  //   }, {});
+
+  //   const items = postsAllWithBlogId.map((post) => {
+  //     post.extendedLikesInfo.myStatus =
+  //       reactionDictionary[post._id.toString()] ?? LikeStatus.NONE;
+  //     post.extendedLikesInfo.newestLikes =
+  //       reactionDictionaryLIKE[post._id.toString()] ?? [];
+  //     return PostViewDto.mapToView(
+  //       post,
+  //       post.extendedLikesInfo.newestLikes,
+  //       post.extendedLikesInfo.myStatus,
+  //     );
+  //   });
+
+  //   const totalCount = await this.postModel.countDocuments({ blogId });
+
+  //   return PaginatedViewDto.mapToView({
+  //     items,
+  //     totalCount,
+  //     page: query.pageNumber,
+  //     size: query.pageSize,
+  //   });
+  // }
 
   async getAllWithReactions(
     blogId: string,
@@ -136,7 +311,7 @@ export class PostsQueryRepository {
 
     const postIds = postsAllWithBlogId.map((p) => p._id.toString());
 
-    //Получение любых реакций
+    // Получение реакций текущего пользователя
     const postsReactions =
       await this.postRepository.findManyReactionByUserIdAndPostId(
         userId,
@@ -149,49 +324,46 @@ export class PostsQueryRepository {
       };
     }, {});
 
+    // Получение последних лайков для каждого поста
     const postsLikeReaction = await this.postRepository.findAllLikeByPostIds(
       LikeStatus.LIKE,
       postIds,
     );
 
-    // Получение login user
-    const uniqueUserIds = [
-      ...new Set(
-        postsLikeReaction.map((item) => item.userId?.toString() || ''),
-      ),
+    // Группируем лайки по postId
+    const likesByPostId = postsLikeReaction.reduce((acc, reaction) => {
+      if (!acc[reaction.postId]) {
+        acc[reaction.postId] = [];
+      }
+      acc[reaction.postId].push(reaction);
+      return acc;
+    }, {});
+
+    // Получаем логины пользователей
+    const userIds = [
+      ...new Set(postsLikeReaction.map((r) => r.userId!.toString())),
     ];
-    const loginsUsers =
-      await this.usersRepository.findUsersByUserIds(uniqueUserIds);
-    const userIdToLoginMap = loginsUsers.reduce((acc, user) => {
+    const users = await this.usersRepository.findUsersByUserIds(userIds);
+    const userLoginMap = users.reduce((acc, user) => {
       acc[user.id] = user.login;
       return acc;
     }, {});
-    const reactionDictionaryLIKE = postsLikeReaction.reduce((acc, reaction) => {
-      const postId = reaction.postId;
-      const userId = reaction.userId?.toString();
 
-      if (!userId) return acc; // пропускаем если нет userId
-
-      if (!acc[postId]) {
-        acc[postId] = [];
-      }
-
-      acc[postId].push({
-        userId: userId,
-        login: userIdToLoginMap[userId] || 'deleted', // или 'unknown' если пользователь не найден
-        addedAt: reaction.createdAt.toISOString,
-      });
-
-      return acc;
-    }, {});
-
+    // Формируем items
     const items = postsAllWithBlogId.map((post) => {
-      post.extendedLikesInfo.myStatus = reactionDictionary[post._id.toString()] ?? LikeStatus.NONE;
-      post.extendedLikesInfo.newestLikes = reactionDictionaryLIKE[post._id.toString()] ?? [];
+      const postId = post._id.toString();
+      const newestLikes = (likesByPostId[postId] || [])
+        .slice(0, 3) // Берем только 3 последних
+        .map((like) => ({
+          addedAt: like.createdAt.toISOString(), // Добавляем поле addedAt
+          userId: like.userId.toString(),
+          login: userLoginMap[like.userId.toString()] || 'deleted',
+        }));
+
       return PostViewDto.mapToView(
         post,
-        post.extendedLikesInfo.newestLikes,
-        post.extendedLikesInfo.myStatus,
+        newestLikes,
+        reactionDictionary[postId] ?? LikeStatus.NONE,
       );
     });
 
@@ -241,7 +413,7 @@ export class PostsQueryRepository {
     const userIds = postsLikeReaction.map(
       (item) => item.userId?.toString() || '',
     );
- 
+
     const loginsUsers = await this.usersRepository.findUsersByUserIds(userIds);
     const userIdToLoginMap = loginsUsers.reduce((acc, user) => {
       acc[user.id] = user.login;
