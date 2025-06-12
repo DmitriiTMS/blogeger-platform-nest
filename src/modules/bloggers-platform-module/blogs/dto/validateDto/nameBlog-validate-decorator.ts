@@ -4,4 +4,4 @@ import { Trim } from '../../../../user-accounts/users/decorators/trim.decorator'
 
 
 export const NameBlogApplyDecorator = () =>
-  applyDecorators(Trim(), IsNotEmpty(), IsString(), MaxLength(15));
+  applyDecorators(Trim(), IsNotEmpty({message: 'Name blog не может быть пустым'}), IsString(), MaxLength(15));

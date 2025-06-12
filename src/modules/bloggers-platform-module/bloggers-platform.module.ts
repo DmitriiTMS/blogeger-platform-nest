@@ -24,11 +24,20 @@ import { SETTINGS } from '../../core/settings';
 import { JwtService } from '@nestjs/jwt';
 import { CommentsQueryReactionsRepository } from './comments/dto/reaction/comment-query-reaction-repository.dto';
 import { PostReaction, PostReactionSchema } from './posts/schemas/post-reaction.schema';
+import { CqrsModule } from '@nestjs/cqrs';
+import { BlogsCreateUseCase } from './blogs/useCases/blog-create-use-case';
+import { BlogsUpdateUseCase } from './blogs/useCases/blog-update-use-case';
+import { BlogsDeleteUseCase } from './blogs/useCases/blog-delete-use-case';
+import { CreatePostByBlogIdUseCase } from './blogs/useCases/create-post-by-blogId';
+
 
 const services = [BlogsService, PostsService, CommentsService];
 
+const useCases = [BlogsCreateUseCase, BlogsUpdateUseCase, BlogsDeleteUseCase, CreatePostByBlogIdUseCase]
+
 @Module({
   imports: [
+    CqrsModule.forRoot(),
     MongooseModule.forFeature([
       { name: Blog.name, schema: BlogSchema },
       { name: Post.name, schema: PostSchema },
@@ -59,7 +68,8 @@ const services = [BlogsService, PostsService, CommentsService];
     PostsQueryRepository,
     CommentsRepository,
     CommentsReactionsRepository,
-    CommentsQueryReactionsRepository
+    CommentsQueryReactionsRepository,
+    ...useCases
   ],
 })
 export class BloggersPlatformModule {}
