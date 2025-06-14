@@ -18,7 +18,7 @@ export class UsersRepository {
   }
 
   async getOne(id: string): Promise<UserDocument | null> {
-    return await this.userModel.findOne({ _id: new Types.ObjectId(id) });
+    return await this.userModel.findOne({ _id: new Types.ObjectId(id) }).lean<UserDocument>();
   }
 
   async findByEmail(email: string): Promise<UserDocument | null> {
@@ -86,4 +86,9 @@ export class UsersRepository {
       )
       .lean<UserDocument>();
   }
+
+  async findUsersByUserIds( userIds: string[]) {
+    return await this.userModel.find({ _id: { $in:  userIds} }).select('login')
+  }
+
 }

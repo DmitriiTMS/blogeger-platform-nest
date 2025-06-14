@@ -15,7 +15,7 @@ export class PaginatedViewDto<T> {
   }): PaginatedViewDto<T> {
     return {
       totalCount: data.totalCount,
-      pagesCount: Math.ceil(data.totalCount / data.size),
+      pagesCount: data.totalCount ? Math.ceil(data.totalCount / data.size) : 0,
       page: data.page,
       pageSize: data.size,
       items: data.items,

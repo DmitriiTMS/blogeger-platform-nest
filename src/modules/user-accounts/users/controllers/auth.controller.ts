@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UserCreateDto } from '../dto/user-create.dto';
@@ -20,6 +21,7 @@ import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dt
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 import { ExtractUserFromRequest } from '../decorators/extract-user-from-request.decorator';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -32,8 +34,18 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @HttpCode(HttpStatus.OK)
   // async login(@Request() req): Promise<{ accessToken: string }> {
-  async login(@ExtractUserFromRequest() user: UserViewDto): Promise<{ accessToken: string }> {
-    return await this.authService.loginUser(user);
+  async login(
+    @ExtractUserFromRequest() user: UserViewDto,
+    @Res({passthrough: true}) res: Response
+   ): Promise<{ accessToken: string }> {
+
+    const resultTokens = await this.authService.loginUser(user);
+    res.cookie('refreshToken', resultTokens.refreshToken, {
+      httpOnly: true,
+      secure: true, // Для HTTPS
+      sameSite: 'strict' // Защита от CSRF
+    });
+    return {accessToken: resultTokens.accessToken}
   }
 
   @Post('password-recovery')

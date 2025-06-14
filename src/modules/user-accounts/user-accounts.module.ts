@@ -11,7 +11,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { SETTINGS } from '../../core/settings';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './users/strategies/local.strategy';
-import { JwtModule } from '@nestjs/jwt';
+import {  JwtService } from '@nestjs/jwt';
 import { JwtStrategy } from './users/strategies/jwt.strategy';
 import { AuthQueryRepository } from './users/repositories/auth-query.repository';
 import {
@@ -44,13 +44,33 @@ import { EmailService } from './users/other-services/email.service';
       },
     }),
     PassportModule,
-    JwtModule.register({
-      secret: SETTINGS.JWT_ACCESS_TOKEN,
-      signOptions: { expiresIn: '6m' },
-    }),
   ],
   controllers: [UsersController, AuthController],
   providers: [
+    {
+      provide: SETTINGS.ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (): JwtService => {
+        return new JwtService({
+          secret: SETTINGS.ACCESS_TOKEN_SECRET,
+          signOptions: { expiresIn: '5m' },
+        });
+      },
+      inject: [
+        /*TODO: inject configService. will be in the following lessons*/
+      ],
+    },
+    {
+      provide: SETTINGS.REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (): JwtService => {
+        return new JwtService({
+          secret: SETTINGS.REFRESH_TOKEN_SECRET,
+          signOptions: { expiresIn: '1d' },
+        });
+      },
+      inject: [
+        /*TODO: inject configService. will be in the following lessons*/
+      ],
+    },
     UsersService,
     UsersRepository,
     UsersQueryRepository,
@@ -61,8 +81,8 @@ import { EmailService } from './users/other-services/email.service';
     EmailService,
     ApiLoggerMiddleware,
   ],
+  exports: [UsersRepository],
 })
-
 export class UserAccountsModule {
   // configure(consumer: MiddlewareConsumer) {
   //   consumer
@@ -73,6 +93,6 @@ export class UserAccountsModule {
   //       {path: 'auth/registration-confirmation', method: RequestMethod.POST},
   //       {path: 'auth/registration', method: RequestMethod.POST},
   //       {path: 'auth/registration-email-resending', method: RequestMethod.POST},
-  //     ); 
+  //     );
   // }
 }

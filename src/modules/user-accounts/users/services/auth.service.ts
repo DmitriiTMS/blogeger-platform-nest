@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { UserCreateDto } from '../dto/user-create.dto';
 import { UsersService } from './users.service';
 import { randomUUID } from 'crypto';
@@ -13,26 +13,34 @@ import { NewPasswordDto } from '../dto/new-password.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 import { EmailService } from '../other-services/email.service';
-
-
+import { SETTINGS } from '../../../../core/settings';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private usersRepository: UsersRepository,
-    private jwtService: JwtService,
     private emailService: EmailService,
-    
+    @Inject(SETTINGS.ACCESS_TOKEN_STRATEGY_INJECT_TOKEN)
+    private accessJwtService: JwtService,
+    @Inject(SETTINGS.REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
+    private refreshJwtService: JwtService,
   ) {}
 
-  async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string }> {
-    const accessToken = await this.jwtService.signAsync({
+  async loginUser(userViewDto: UserViewDto): Promise<{ accessToken: string, refreshToken: string }> {
+    const accessToken = this.accessJwtService.sign({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
     });
+
+    const refreshToken =  this.refreshJwtService.sign({
+      userId: userViewDto.id,
+      deviceId: 'deviceId',
+    });
+
     return {
       accessToken,
+      refreshToken
     };
   }
 
@@ -47,9 +55,11 @@ export class AuthService {
       isConfirmed: false,
     };
 
-    await this.usersService.createUser(userCreateDto, emailConfirmation)
-    await this.emailService.registerUserAndResendingEmail(userCreateDto.email, code)
-   
+    await this.usersService.createUser(userCreateDto, emailConfirmation);
+    await this.emailService.registerUserAndResendingEmail(
+      userCreateDto.email,
+      code,
+    );
   }
 
   async passwordRecovery(email: string) {
@@ -62,9 +72,11 @@ export class AuthService {
     }
 
     const recoveryCode = randomUUID();
-    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(), recoveryCode)
-    await this.emailService.passwordRecovery(email, recoveryCode)
-    
+    await this.usersRepository.updateUserСonfirmationCode(
+      user._id.toString(),
+      recoveryCode,
+    );
+    await this.emailService.passwordRecovery(email, recoveryCode);
   }
 
   async newPassword(newPasswordDto: NewPasswordDto) {
@@ -130,7 +142,9 @@ export class AuthService {
     await this.usersRepository.updateUserIsConfirmed(user._id.toString());
   }
 
-  async registrationEmailResending(regEmailResDto: RegistrationEmailEesendingDto) {
+  async registrationEmailResending(
+    regEmailResDto: RegistrationEmailEesendingDto,
+  ) {
     const user = await this.usersRepository.findByEmail(regEmailResDto.email);
     if (!user) {
       throw new CustomDomainException({
@@ -155,9 +169,14 @@ export class AuthService {
     }
 
     const newConfirmationCode = randomUUID();
-    await this.usersRepository.updateUserСonfirmationCode(user._id.toString(),newConfirmationCode)
-    await this.emailService.registerUserAndResendingEmail(regEmailResDto.email, newConfirmationCode)
-  
+    await this.usersRepository.updateUserСonfirmationCode(
+      user._id.toString(),
+      newConfirmationCode,
+    );
+    await this.emailService.registerUserAndResendingEmail(
+      regEmailResDto.email,
+      newConfirmationCode,
+    );
   }
 
   async validateUser(

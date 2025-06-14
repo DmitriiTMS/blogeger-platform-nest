@@ -1,23 +1,15 @@
-import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
+
+import { NameBlogApplyDecorator } from './validateDto/nameBlog-validate-decorator';
+import { DescriptionBlogApplyDecorator } from './validateDto/description-validate-decorator';
+import { WebsiteUrlBlogApplyDecorator } from './validateDto/websiteUrl-validate-decorators';
 
 export class CreateAndUpdateBlogtDto {
-  @IsNotEmpty({ message: 'Поле name не может быть пустым' })
-  @IsString({ message: 'Поле name должно быть строкой' })
-  @MaxLength(15, { message: 'Максимальное количество символов 15' })
+ @NameBlogApplyDecorator()
   name: string;
 
-  @IsNotEmpty({ message: 'Поле description не может быть пустым' })
-  @IsString({ message: 'Поле description должно быть строкой' })
-  @MaxLength(500, { message: 'Максимальное количество символов 500' })
+  @DescriptionBlogApplyDecorator()
   description: string;
 
-  @IsNotEmpty({ message: 'Поле websiteUrl не может быть пустым' })
-  @MaxLength(100, { message: 'Максимальное количество символов 100' })
-  @Matches(
-    /^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/,
-    {
-      message: 'websiteUrl должен начинаться с https:// и соответствовать формату: https://site.exemples.com',
-    },
-  )
+  @WebsiteUrlBlogApplyDecorator(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/)
   websiteUrl: string;
 }
