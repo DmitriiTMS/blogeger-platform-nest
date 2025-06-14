@@ -14,8 +14,16 @@ export class ExtendedLikesInfo {
   @Prop({ type: Number, default: 0, required: true })
   dislikesCount: number;
 
+  @Prop({
+    type: String,
+    required: true,
+    enum: Object.values(LikeStatus),
+  })
+  myStatus: LikeStatus;
+
+  @Prop({ type: Array, default: [],})
+  newestLikes: []
 }
 
 export const ExtendedLikesInfoSchema =
   SchemaFactory.createForClass(ExtendedLikesInfo);
-
