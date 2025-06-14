@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Request,
   Res,
   UseGuards,
@@ -76,6 +77,22 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationEmailResending(@Body() body: RegistrationEmailEesendingDto) {
     return await this.authService.registrationEmailResending(body)
+  }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(
+    @Req() req,
+    @Res({passthrough: true}) res: Response
+  ) {
+    const { refreshToken } = req.cookies
+    const tokens = await this.authService.refreshToken(refreshToken)
+    res.cookie('refreshToken', tokens.newRefreshToken, {
+      httpOnly: true,
+      secure: true, // Для HTTPS
+      sameSite: 'strict' // Защита от CSRF
+    });
+    return {accessToken: tokens.newAccessToken}
   }
 
   @Get('me')

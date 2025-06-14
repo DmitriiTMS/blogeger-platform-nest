@@ -20,12 +20,15 @@ import {
 } from './users/schemas/access-to-api.schema';
 import { ApiLoggerMiddleware } from './users/middlewares/apiLoggerMiddleware';
 import { EmailService } from './users/other-services/email.service';
+import { RefreshTokens, RefreshTokensSchema } from './users/schemas/refresh-token.schema';
+import { RefreshTokenRepository } from './users/repositories/refresh-token.repository';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: AccessToApi.name, schema: AccessToApiSchema },
+      { name: RefreshTokens.name, schema: RefreshTokensSchema },
     ]),
     MailerModule.forRoot({
       transport: {
@@ -52,7 +55,7 @@ import { EmailService } from './users/other-services/email.service';
       useFactory: (): JwtService => {
         return new JwtService({
           secret: SETTINGS.ACCESS_TOKEN_SECRET,
-          signOptions: { expiresIn: '5m' },
+          signOptions: { expiresIn: '5s' },
         });
       },
       inject: [
@@ -64,7 +67,7 @@ import { EmailService } from './users/other-services/email.service';
       useFactory: (): JwtService => {
         return new JwtService({
           secret: SETTINGS.REFRESH_TOKEN_SECRET,
-          signOptions: { expiresIn: '1d' },
+          signOptions: { expiresIn: '10s' },
         });
       },
       inject: [
@@ -80,6 +83,7 @@ import { EmailService } from './users/other-services/email.service';
     AuthQueryRepository,
     EmailService,
     ApiLoggerMiddleware,
+    RefreshTokenRepository
   ],
   exports: [UsersRepository],
 })

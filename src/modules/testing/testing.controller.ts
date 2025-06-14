@@ -8,6 +8,7 @@ import { AccessToApi } from '../user-accounts/users/schemas/access-to-api.schema
 import { Comment } from '../bloggers-platform-module/comments/schemas/comments.schema';
 import { CommentReaction } from '../bloggers-platform-module/comments/schemas/comment-reaction.schema';
 import { PostReaction } from '../bloggers-platform-module/posts/schemas/post-reaction.schema';
+import { RefreshTokens } from '../user-accounts/users/schemas/refresh-token.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -19,6 +20,7 @@ export class TestingController {
     @InjectModel(AccessToApi.name) private accessToApiModel: Model<AccessToApi>,
     @InjectModel(CommentReaction.name) private commentReaction: Model<CommentReaction>,
     @InjectModel(PostReaction.name) private postReaction: Model<PostReaction>,
+    @InjectModel(RefreshTokens.name) private refreshTokensReaction: Model<RefreshTokens>,
   ) {}
 
   @Delete('all-data')
@@ -31,6 +33,7 @@ export class TestingController {
     await this.accessToApiModel.deleteMany();
     await this.commentReaction.deleteMany();
     await this.postReaction.deleteMany();
+    await this.refreshTokensReaction.deleteMany();
     return;
   }
 }
