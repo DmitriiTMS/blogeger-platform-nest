@@ -8,9 +8,10 @@ import { CommentUpdateDataDto } from '../dto/data-dto/comment-update-data.dto';
 import { IsExistUserComment } from '../dto/data-dto/comment-is-exist-user-data.dto';
 import mongoose, { Types } from 'mongoose';
 import { CommentDataReactionDto } from '../dto/reaction/comment-data-reaction.dto';
-import { UsersRepository } from 'src/modules/user-accounts/users/repositories/users.repository';
+import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users/users.repository';
 import { CommentsReactionsRepository } from '../repositories/comments-reactions.repository';
 import { LikeStatus } from '../../posts/schemas/extendedLikesInfo.schema';
+
 
 @Injectable()
 export class CommentsService {

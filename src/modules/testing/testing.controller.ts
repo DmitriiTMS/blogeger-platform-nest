@@ -9,6 +9,7 @@ import { Comment } from '../bloggers-platform-module/comments/schemas/comments.s
 import { CommentReaction } from '../bloggers-platform-module/comments/schemas/comment-reaction.schema';
 import { PostReaction } from '../bloggers-platform-module/posts/schemas/post-reaction.schema';
 import { RefreshTokens } from '../user-accounts/users/schemas/refresh-token.schema';
+import { Devices } from '../user-accounts/users/schemas/devices.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -21,6 +22,7 @@ export class TestingController {
     @InjectModel(CommentReaction.name) private commentReaction: Model<CommentReaction>,
     @InjectModel(PostReaction.name) private postReaction: Model<PostReaction>,
     @InjectModel(RefreshTokens.name) private refreshTokensReaction: Model<RefreshTokens>,
+    @InjectModel(Devices.name) private devices: Model<Devices>,
   ) {}
 
   @Delete('all-data')
@@ -34,6 +36,7 @@ export class TestingController {
     await this.commentReaction.deleteMany();
     await this.postReaction.deleteMany();
     await this.refreshTokensReaction.deleteMany();
+    await this.devices.deleteMany();
     return;
   }
 }

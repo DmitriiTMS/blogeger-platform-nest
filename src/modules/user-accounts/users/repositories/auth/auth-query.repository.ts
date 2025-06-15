@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { UsersQueryRepository } from './users-query.repository';
-import { UserGetMeResponse, UserGetMeViewDto } from '../dto/viewsDto/getMe-view.dto';
+
+import { UserGetMeResponse, UserGetMeViewDto } from '../../dto/viewsDto/getMe-view.dto';
+import { UsersQueryRepository } from '../users/users-query.repository';
 
 @Injectable()
 export class AuthQueryRepository {

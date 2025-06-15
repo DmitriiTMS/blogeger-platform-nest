@@ -15,7 +15,7 @@ import {
   CommentReactionModelType,
 } from '../../comments/schemas/comment-reaction.schema';
 import { PostsRepository } from './posts.repository';
-import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users.repository';
+import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users/users.repository';
 
 @Injectable()
 export class PostsQueryRepository {

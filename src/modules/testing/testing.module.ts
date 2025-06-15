@@ -18,6 +18,7 @@ import { Comment, CommentSchema } from '../bloggers-platform-module/comments/sch
 import { CommentReaction, CommentReactionSchema } from '../bloggers-platform-module/comments/schemas/comment-reaction.schema';
 import { PostReaction, PostReactionSchema } from '../bloggers-platform-module/posts/schemas/post-reaction.schema';
 import { RefreshTokens, RefreshTokensSchema } from '../user-accounts/users/schemas/refresh-token.schema';
+import { Devices, DevicesSchema } from '../user-accounts/users/schemas/devices.schema';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RefreshTokens, RefreshTokensSchema } from '../user-accounts/users/schem
       { name: CommentReaction.name, schema: CommentReactionSchema },
       { name: PostReaction.name, schema: PostReactionSchema },
       { name: RefreshTokens.name, schema: RefreshTokensSchema },
+      { name: Devices.name, schema: DevicesSchema },
     ]),
   ],
   controllers: [TestingController],

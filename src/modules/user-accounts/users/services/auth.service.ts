@@ -9,7 +9,7 @@ import { UserCreateDto } from '../dto/user-create.dto';
 import { UsersService } from './users.service';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns/add';
-import { UsersRepository } from '../repositories/users.repository';
+
 import { Bcrypt } from '../../../../utils/bcrypt';
 import { UserViewDto } from '../dto/viewsDto/user-view.dto';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
@@ -20,7 +20,9 @@ import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dt
 import { RegistrationEmailEesendingDto } from '../dto/registration-email-resending.dto';
 import { EmailService } from '../other-services/email.service';
 import { SETTINGS } from '../../../../core/settings';
-import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
+import { RefreshTokenRepository } from '../repositories/refresh-token/refresh-token.repository';
+import { UsersRepository } from '../repositories/users/users.repository';
+import { DevicesRepository } from '../repositories/devices/devices.repository';
 
 @Injectable()
 export class AuthService {
@@ -33,23 +35,27 @@ export class AuthService {
     @Inject(SETTINGS.REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
     private refreshJwtService: JwtService,
     private refreshTokenRepository: RefreshTokenRepository,
+    private devicesRepository: DevicesRepository,
   ) {}
 
   async loginUser(
     userViewDto: UserViewDto,
+    infoDevice: { ip?: string; title?: string },
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = this.accessJwtService.sign({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
     });
 
+    const deviceId = randomUUID();
     const refreshToken = this.refreshJwtService.sign({
       userId: userViewDto.id,
       userLogin: userViewDto.login,
-      deviceId: 'deviceId',
+      deviceId: deviceId,
     });
 
     await this.refreshTokenRepository.addRefreshToken({ refreshToken });
+    await this.createDeviceUsers(refreshToken,infoDevice.ip!,infoDevice.title!);
 
     return {
       accessToken,
@@ -197,6 +203,32 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token не передан в cookies');
     }
 
+    const verifyRefreshToken = await this.verifyRefreshToken(refreshToken);
+
+    const newAccessToken = this.accessJwtService.sign({
+      userId: verifyRefreshToken.userId,
+      userLogin: verifyRefreshToken.userLogin,
+    });
+
+    const newRefreshToken = this.refreshJwtService.sign({
+      userId: verifyRefreshToken.userId,
+      userLogin: verifyRefreshToken.userLogin,
+      deviceId: verifyRefreshToken.deviceId,
+    });
+
+    const token =
+      await this.refreshTokenRepository.findByRefreshToken(refreshToken);
+    if (!token) {
+      throw new UnauthorizedException('REFRESH_TOKEN_NOT_FOUND');
+    }
+
+    await this.refreshTokenRepository.deleteRefreshToken(token._id.toString());
+    await this.refreshTokenRepository.addRefreshToken({
+      refreshToken: newRefreshToken,
+    });
+
+    return { newAccessToken, newRefreshToken };
+
     // const decodeRefreshToken = await jwtService.decodeToken(refreshToken);
     // const tokenInDb = await refreshTokensRepository.findByDevice(
     //   decodeRefreshToken.deviceId
@@ -206,45 +238,6 @@ export class AuthService {
     //   return;
     // }
 
-    const returnAccessAndRefreshTokens =
-      await this.verifyRefreshToken(refreshToken);
-    // console.log(returnAccessAndRefreshTokens);
-
-    return returnAccessAndRefreshTokens;
-  }
-
-  async verifyRefreshToken(refreshToken: string) {
-    try {
-      // 1. Проверяем токен
-      const decodeRefreshToken = await this.refreshJwtService.verify(refreshToken);
-
-      // 2. Проверяем payload - ОПЦИОНАЛЬНО!!!!!!
-      if (!decodeRefreshToken?.userId || !decodeRefreshToken?.userLogin) {
-        throw new UnauthorizedException('INVALID_TOKEN_PAYLOAD');
-      }
-
-      // 3. Ищем токен в БД
-      const token = await this.refreshTokenRepository.findByRefreshToken(refreshToken);
-      if (!token) {
-        throw new UnauthorizedException('REFRESH_TOKEN_NOT_FOUND');
-      }
-
-      // 4. Создаём новые токены
-      const newAccessToken = this.accessJwtService.sign({
-        userId: decodeRefreshToken.userId,
-        userLogin: decodeRefreshToken.userLogin,
-      });
-
-      const newRefreshToken = this.refreshJwtService.sign({
-        userId: decodeRefreshToken.userId,
-        userLogin: decodeRefreshToken.userLogin,
-        deviceId: 'deviceId',
-      });
-
-      // 5. Удаляем старый и сохраняем новый (в транзакции, если нужно)
-      await this.refreshTokenRepository.deleteRefreshToken(token._id?.toString());
-      await this.refreshTokenRepository.addRefreshToken({refreshToken: newRefreshToken,});
-
     // const decodeNewRefreshToken = await jwtService.decodeToken(newRefreshToken);
     // await refreshTokensRepository.updateSessionLastActiveDate(
     //   decodeRefreshToken.deviceId!,
@@ -252,16 +245,61 @@ export class AuthService {
     //   newRefreshToken, // новый refreshToken
     //   new Date(decodeNewRefreshToken.iat! * 1000).toISOString() // новое lastActiveDate
     // );
+  }
 
-      return { newAccessToken, newRefreshToken };
+  async logout(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token не передан в cookies');
+    }
+
+    await this.verifyRefreshToken(refreshToken);
+
+    const token =
+      await this.refreshTokenRepository.findByRefreshToken(refreshToken);
+    if (!token) {
+      throw new UnauthorizedException('REFRESH_TOKEN_NOT_FOUND');
+    }
+
+    await this.refreshTokenRepository.deleteRefreshToken(token._id.toString());
+  }
+
+  async createDeviceUsers(refreshToken: string, ip: string, title: string) {
+    const decodeRefreshToken = await this.verifyRefreshToken(refreshToken);
+
+    if (!ip || !title) {
+      throw new BadRequestException('IP или title не переданы');
+    }
+
+    const session = {
+      ip: ip === '::1' ? '127.0.0.1' : ip,
+      title,
+      lastActiveDate: new Date(decodeRefreshToken.iat! * 1000).toISOString(),
+      deviceId: decodeRefreshToken?.deviceId,
+      userId: decodeRefreshToken.userId,
+      refreshToken,
+    };
+
+    await this.devicesRepository.createSession(session);
+    return true;
+  }
+
+  async verifyRefreshToken(refreshToken: string) {
+    try {
+      // 1. Проверяем токен
+      const decodeRefreshToken =
+        await this.refreshJwtService.verify(refreshToken);
+
+      // 2. Проверяем payload - ОПЦИОНАЛЬНО!!!!!!
+      if (!decodeRefreshToken?.userId || !decodeRefreshToken?.userLogin) {
+        throw new UnauthorizedException('INVALID_TOKEN_PAYLOAD');
+      }
+      return decodeRefreshToken;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new UnauthorizedException('REFRESH_TOKEN_EXPIRED');
       }
       throw new UnauthorizedException('INVALID_REFRESH_TOKEN');
     }
-
-    
   }
 
   async validateUser(

@@ -9,7 +9,7 @@ import { PostDataCommentCreateDto } from '../dto/post-data-comment-create.dto';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
 import { DomainExceptionCode } from '../../../../setup/exceptions/filters/constants';
 import mongoose, { Types } from 'mongoose';
-import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users.repository';
+import { UsersRepository } from '../../../../modules/user-accounts/users/repositories/users/users.repository';
 import { CommentsRepository } from '../../comments/repositories/comments.repository';
 import {
   Comment,

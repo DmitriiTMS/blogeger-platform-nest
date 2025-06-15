@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { RefreshTokens } from '../schemas/refresh-token.schema';
+import { RefreshTokens } from '../../schemas/refresh-token.schema';
 import { Model } from 'mongoose';
 
 @Injectable()

@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserCreateDto } from '../dto/user-create.dto';
 import { User, UserDocument, UserModelType } from '../schemas/users.schema';
-import { UsersRepository } from '../repositories/users.repository';
+
 import { InjectModel } from '@nestjs/mongoose';
 import { Bcrypt } from '../../../../utils/bcrypt';
 import { CustomDomainException } from '../../../../setup/exceptions/custom-domain.exception';
+import { UsersRepository } from '../repositories/users/users.repository';
 
 
 @Injectable()
